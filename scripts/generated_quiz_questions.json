@@ -1,0 +1,980 @@
+[
+  {
+    "id": "mc-25624a860d",
+    "title": "Câu 1: Bản chất Nhà nước",
+    "category": "Bản chất Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Hoạt động nào sau đây thể hiện bản chất giai cấp của nhà nước?",
+    "options": [
+      "Phát triển văn hóa, xã hội.",
+      "Phát triển khoa học, công nghệ.",
+      "Bảo vệ giai cấp bị trị.",
+      "Bảo vệ giai cấp thống trị."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-637c4daad6",
+    "title": "Câu 2: Chức năng Nhà nước",
+    "category": "Chức năng Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Việc nhà nước mở rộng chương trình hỗ trợ hộ nghèo và tạo việc làm cho người dân thuộc chức năng nào sau đây của nhà nước?",
+    "options": [
+      "Chức năng đối nội.",
+      "Chức năng đối ngoại.",
+      "Chức năng bảo vệ Tổ quốc.",
+      "Chức năng quốc phòng."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-8220f3867f",
+    "title": "Câu 3: Đặc trưng Pháp luật",
+    "category": "Đặc trưng Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Thuộc tính nào sau đây không là đặc trưng của pháp luật?",
+    "options": [
+      "Tính quy phạm phổ biến.",
+      "Tính tùy nghi về hình thức.",
+      "Tính hệ thống.",
+      "Tính quyền lực nhà nước."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-0957546770",
+    "title": "Câu 4: Nguồn Pháp luật",
+    "category": "Nguồn Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nguồn của pháp luật được hiểu là",
+    "options": [
+      "ý kiến đóng góp của các tổ chức, cá nhân về các vấn đề kinh tế, văn hóa, xã hội.",
+      "hình thức chứa đựng và thể hiện các quy phạm pháp luật do nhà nước ban hành hoặc thừa nhận.",
+      "tất cả nguyên tắc đạo đức được truyền miệng qua nhiều thế hệ.",
+      "nơi lưu trữ văn bản, tài liệu trong các thư viện."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-db8668007a",
+    "title": "Câu 5: Quan hệ Pháp luật",
+    "category": "Quan hệ Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nghĩa vụ chủ thể trong nội dung của quan hệ pháp luật được hiểu là",
+    "options": [
+      "cách xử sự mang tính tùy nghi thực hiện theo ý muốn chủ quan của chủ thể.",
+      "cách xử sự bắt buộc mà nhà nước yêu cầu chủ thể phải thực hiện.",
+      "quyền yêu cầu của cơ quan hành chính nhà nước với cơ quan lập pháp.",
+      "sự tự giác thực hiện của chủ thể mà không kèm theo chế tài."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-fb25a1da45",
+    "title": "Câu 6: Thực hiện Pháp luật",
+    "category": "Thực hiện Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Hình thức thực hiện pháp luật nào đòi hỏi các chủ thể pháp luật phải kiềm chế không thực hiện các hành vi bị pháp luật cấm?",
+    "options": [
+      "Sử dụng pháp luật.",
+      "Thi hành pháp luật.",
+      "Tuân thủ pháp luật.",
+      "Áp dụng pháp luật."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-9bd4d4084f",
+    "title": "Câu 7: Hình thức Áp dụng Pháp luật",
+    "category": "Hình thức Áp dụng Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nhận định nào sau đây là đúng?",
+    "options": [
+      "Sử dụng pháp luật mang tính bắt buộc, áp dụng pháp luật mang tính tùy nghi.",
+      "Sử dụng pháp luật do cá nhân thực hiện, áp dụng pháp luật do tổ chức thực hiện.",
+      "Sử dụng pháp luật là quyền lựa chọn hành vi pháp lý, áp dụng pháp luật là hoạt động nhân danh nhà nước ra quyết định pháp lý cá biệt.",
+      "Sử dụng pháp luật do tổ chức thực hiện, áp dụng pháp luật do cá nhân có thẩm quyền thực hiện mang tính sáng tạo và linh hoạt."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-b64dd9da16",
+    "title": "Câu 8: Vi phạm Pháp luật",
+    "category": "Vi phạm Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Yếu tố nào sau đây thuộc mặt khách quan của cấu thành vi phạm pháp luật?",
+    "options": [
+      "Động cơ, mục đích sai trái thúc đẩy chủ thể thực hiện hành vi vi phạm pháp luật.",
+      "Lỗi cố ý trực tiếp, lỗi cố ý gián tiếp, lỗi vô ý do cẩu thả, lỗi vô ý vì quá tự tin.",
+      "Các quan hệ xã hội được pháp luật bảo vệ bị hành vi trái pháp luật xâm hại.",
+      "Hành vi trái pháp luật, hậu quả thiệt hại cho xã hội do hành vi trái pháp luật gây ra."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-91f2b1a324",
+    "title": "Câu 9: Nguồn gốc Nhà nước",
+    "category": "Nguồn gốc Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Theo quan điểm của chủ nghĩa Mác - Lênin, nhà nước ra đời do nguyên nhân nào sau đây?",
+    "options": [
+      "Do nhu cầu của số đông người trong xã hội.",
+      "Do chiến tranh giữa các bộ lạc.",
+      "Do thỏa thuận của các thành viên trong xã hội.",
+      "Do mâu thuẫn giai cấp đến mức không thể điều hòa được."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-cb20b4be76",
+    "title": "Câu 10: Bản chất & Tính xã hội",
+    "category": "Bản chất & Tính xã hội",
+    "questionType": "MC_CHOICE",
+    "question": "Tính xã hội của nhà nước được hiểu là",
+    "options": [
+      "một thuộc tính không có ở nhà nước tư sản.",
+      "một thuộc tính khách quan, phổ biến của mọi nhà nước.",
+      "một thuộc tính chỉ có ở nhà nước xã hội chủ nghĩa.",
+      "một thuộc tính chỉ có ở nhà nước phong kiến."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-458a48c864",
+    "title": "Câu 11: Đặc trưng quyền lực Nhà nước",
+    "category": "Đặc trưng quyền lực Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Khác với các tổ chức xã hội, nhà nước có",
+    "options": [
+      "chủ quyền quốc gia.",
+      "quyền lực hòa nhập với dân cư.",
+      "điều lệ riêng.",
+      "nguồn tài chính phụ thuộc."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-030a9ffb1a",
+    "title": "Câu 12: Bộ máy Nhà nước CHXHCN Việt Nam",
+    "category": "Bộ máy Nhà nước CHXHCN Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Hiện nay, cơ quan nào sau đây thuộc bộ máy nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
+    "options": [
+      "Hội đồng bầu cử quốc gia.",
+      "Đảng Cộng sản Việt Nam.",
+      "Mặt trận Tổ quốc Việt Nam.",
+      "Hội Liên hiệp Phụ nữ Việt Nam."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-569dbea429",
+    "title": "Câu 13: Bộ máy Nhà nước CHXHCN Việt Nam",
+    "category": "Bộ máy Nhà nước CHXHCN Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Nhận định nào sau đây là sai về Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
+    "options": [
+      "Nhà nước có một hệ thống pháp luật dân chủ, tiến bộ, phù hợp và khả thi.",
+      "Nhà nước được tổ chức và hoạt động theo cơ chế phân chia quyền lực.",
+      "Nhà nước đảm bảo vị trí tối thượng của pháp luật trong đời sống xã hội.",
+      "Nhà nước được đặt dưới sự lãnh đạo của Đảng Cộng sản Việt Nam."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-e44c3ea22e",
+    "title": "Câu 14: Bản chất Pháp luật",
+    "category": "Bản chất Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nhận định nào sau đây là đúng?",
+    "options": [
+      "Pháp luật vừa mang tính giai cấp, vừa mang tính xã hội.",
+      "Pháp luật không mang tính giai cấp thuần túy; hoàn toàn tách rời, đối kháng với các lợi ích chung của xã hội.",
+      "Trong xã hội hiện đại, tính xã hội của pháp luật hoàn toàn triệt tiêu và thay thế tính giai cấp của pháp luật.",
+      "Tính giai cấp và tính xã hội là hai thuộc tính hoàn toàn độc lập với nhau."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-3caf2272c1",
+    "title": "Câu 15: Hình thức Pháp luật",
+    "category": "Hình thức Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Phương thức thể hiện và tồn tại của pháp luật là",
+    "options": [
+      "hình thức pháp luật.",
+      "công cụ pháp luật.",
+      "cấu trúc pháp luật.",
+      "bản chất pháp luật."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-9e345518b4",
+    "title": "Câu 16: Quy phạm Pháp luật",
+    "category": "Quy phạm Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Bộ phận nào trong cơ cấu của quy phạm pháp luật nêu lên cách xử sự mà chủ thể được làm, phải làm hoặc không được làm trong hoàn cảnh cụ thể?",
+    "options": [
+      "Giả định.",
+      "Quy định.",
+      "Chế tài.",
+      "Biện pháp áp dụng."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-924b4f3f15",
+    "title": "Câu 17: Ý thức Pháp luật",
+    "category": "Ý thức Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Ý thức pháp luật được hiểu là",
+    "options": [
+      "các quy định pháp luật do nhà nước đặt ra để định hướng hành vi của các tổ chức, cá nhân.",
+      "hành vi của các tổ chức, cá nhân về quan điểm, chính sách của nhà nước.",
+      "những học thuyết, tư tưởng của nhà nước đánh giá hành vi xử sự của tổ chức, cá nhân.",
+      "những học thuyết, tư tưởng, quan điểm của con người đối với pháp luật."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-5d4cafafdb",
+    "title": "Câu 18: Thực hiện Pháp luật",
+    "category": "Thực hiện Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Trong các hành vi sau đây, hành vi nào thuộc hình thức thi hành pháp luật?",
+    "options": [
+      "Công dân tự do lựa chọn ngành nghề kinh doanh theo đúng quy định pháp luật.",
+      "Công dân thực hiện nghĩa vụ đóng thuế theo quy định.",
+      "Người điều khiển xe ô tô không uống rượu bia khi lái xe.",
+      "Cảnh sát giao thông xử phạt người điều khiển xe gắn máy không đội mũ bảo hiểm."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-ede3cc2d06",
+    "title": "Câu 19: Áp dụng Pháp luật",
+    "category": "Áp dụng Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Trường hợp nào sau đây cần áp dụng pháp luật?",
+    "options": [
+      "Khi người dân tìm hiểu pháp luật qua sách báo.",
+      "Khi cá nhân tự nguyện thực hiện quyền của mình.",
+      "Khi giải quyết tranh chấp, xử lý vi phạm pháp luật.",
+      "Khi các tổ chức tự đưa ra các nội quy nội bộ."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-acd35e4eb3",
+    "title": "Câu 20: Hệ thống Pháp luật Việt Nam",
+    "category": "Hệ thống Pháp luật Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Việt Nam không có ngành luật nào sau đây?",
+    "options": [
+      "Ngành luật hành chính.",
+      "Ngành luật dân sự.",
+      "Ngành luật tín dụng.",
+      "Ngành luật tố tụng hình sự."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-64a609c704",
+    "title": "Câu 21: Nguồn gốc Nhà nước",
+    "category": "Nguồn gốc Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Quan điểm cho rằng, nhà nước hình thành do Thượng đế trao quyền cho người cai trị thuộc",
+    "options": [
+      "thuyết khế ước xã hội.",
+      "thuyết thần học.",
+      "thuyết bạo lực.",
+      "học thuyết Mác - Lênin."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-5447dcecba",
+    "title": "Câu 22: Bản chất giai cấp của Nhà nước",
+    "category": "Bản chất giai cấp của Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Khi ban hành chính sách thuế, nhà nước ưu tiên bảo vệ lợi ích của nhóm nắm quyền lực kinh tế, chính trị. Điều này phản ánh bản chất nào của nhà nước?",
+    "options": [
+      "Tính xã hội.",
+      "Tính giai cấp.",
+      "Tính dân chủ.",
+      "Tính pháp quyền."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-3bec9419ad",
+    "title": "Câu 23: Chủ quyền quốc gia",
+    "category": "Chủ quyền quốc gia",
+    "questionType": "MC_CHOICE",
+    "question": "Nhà nước ký hợp đồng thương mại với quốc gia khác và tự quyết định chính sách đối ngoại. Đây là biểu hiện của",
+    "options": [
+      "chủ quyền quốc gia.",
+      "quản lý văn hóa, xã hội.",
+      "quyền lực tư pháp.",
+      "quyền lực lập pháp."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-070c4f4508",
+    "title": "Câu 24: Chức năng Nhà nước",
+    "category": "Chức năng Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Mục đích chính của chức năng đối nội của nhà nước là gì?",
+    "options": [
+      "Quản lý, phát triển đời sống xã hội.",
+      "Bảo vệ chủ quyền quốc gia.",
+      "Thiết lập quan hệ ngoại giao.",
+      "Kí kết điều ước quốc tế."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-357eaea99b",
+    "title": "Câu 25: Hình thức Dân chủ",
+    "category": "Hình thức Dân chủ",
+    "questionType": "MC_CHOICE",
+    "question": "Theo Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025), nhân dân thực hiện quyền lực nhà nước bằng hình thức nào sau đây?",
+    "options": [
+      "Dân chủ đại diện, dân chủ hình thức.",
+      "Dân chủ trực tiếp, dân chủ nhân dân.",
+      "Dân biết, dân làm, dân kiểm tra, dân giám sát, dân thụ hưởng.",
+      "Dân chủ trực tiếp, dân chủ đại diện."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-23de95091d",
+    "title": "Câu 26: Cơ quan Hành chính Nhà nước",
+    "category": "Cơ quan Hành chính Nhà nước",
+    "questionType": "MC_CHOICE",
+    "question": "Cơ quan hành chính nhà nước ở Việt Nam gồm những cơ quan nào?",
+    "options": [
+      "Chính phủ, các Bộ, cơ quan ngang Bộ, Hội đồng nhân dân các cấp.",
+      "Chính phủ, Ủy ban nhân dân các cấp, Hội đồng nhân dân các cấp.",
+      "Chính phủ, các Bộ, cơ quan ngang Bộ, Ủy ban nhân dân các cấp.",
+      "Các Bộ, cơ quan ngang Bộ, Hội đồng nhân dân các cấp, Ủy ban nhân dân các cấp."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-3e1b921838",
+    "title": "Câu 27: Nhà nước Pháp quyền XHCN",
+    "category": "Nhà nước Pháp quyền XHCN",
+    "questionType": "MC_CHOICE",
+    "question": "Khi nói về Nhà nước pháp quyền xã hội chủ nghĩa ở Việt Nam, khẳng định nào sau đây sai?",
+    "options": [
+      "Nhà nước được tổ chức và hoạt động trên cơ sở chủ quyền của nhân dân.",
+      "Nhà nước thừa nhận, tôn trọng và bảo vệ quyền con người, quyền công dân.",
+      "Nhà nước có pháp luật chiếm vị trí tối thượng trong đời sống nhà nước và xã hội.",
+      "Nhà nước bảo đảm phân chia, kiềm chế, đối trọng giữa các nhánh quyền lực."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-e8b22c5251",
+    "title": "Câu 28: Nguyên tắc Pháp quyền",
+    "category": "Nguyên tắc Pháp quyền",
+    "questionType": "MC_CHOICE",
+    "question": "Nội dung nào sau đây thể hiện nguyên tắc pháp quyền trong xây dựng và hoàn thiện Nhà nước pháp quyền xã hội chủ nghĩa ở Việt Nam hiện nay?",
+    "options": [
+      "Mọi cơ quan, tổ chức, cá nhân chỉ được làm những gì mà pháp luật cho phép.",
+      "Cơ quan tư pháp có thể hoạt động độc lập với pháp luật nếu vì mục tiêu chính trị.",
+      "Quyền lực nhà nước chỉ cần phục tùng mệnh lệnh của cơ quan hành pháp.",
+      "Quyền lực nhà nước phải được thực hiện trong khuôn khổ Hiến pháp và pháp luật."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-c72c9b241f",
+    "title": "Câu 29: Bản chất Pháp luật Việt Nam",
+    "category": "Bản chất Pháp luật Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Đặc điểm nào sau đây không phản ánh bản chất pháp luật của Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
+    "options": [
+      "Có tính nhân dân, tính xã hội rộng lớn.",
+      "Thể hiện ý chí nhà nước của giai cấp công nhân, nhân dân lao động.",
+      "Phụ thuộc hoàn toàn nền kinh tế thị trường.",
+      "Có quan hệ mật thiết với đường lối của Đảng Cộng sản Việt Nam."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-b69949c71e",
+    "title": "Câu 30: Thuộc tính Pháp luật",
+    "category": "Thuộc tính Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Quy định tại Điều 29 Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025): “Công dân đủ 18 tuổi trở lên có quyền biểu quyết khi nhà nước tổ chức trưng cầu ý dân” thể hiện rõ nhất đặc trưng nào của pháp luật?",
+    "options": [
+      "Tính quy phạm phổ biến.",
+      "Tính cưỡng chế nhà nước.",
+      "Tính quy phạm bắt buộc.",
+      "Tính nghĩa vụ nhà nước."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-3dce8bc1f8",
+    "title": "Câu 31: Mối quan hệ Pháp luật và Tập quán",
+    "category": "Mối quan hệ Pháp luật và Tập quán",
+    "questionType": "MC_CHOICE",
+    "question": "Một địa phương có tập quán tảo hôn nhưng chính quyền yêu cầu chấm dứt theo quy định pháp luật. Điều này cho thấy",
+    "options": [
+      "tập quán được ưu tiên áp dụng.",
+      "pháp luật loại bỏ tập quán lạc hậu.",
+      "tập quán có giá trị cao hơn pháp luật.",
+      "pháp luật phải theo tập quán."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-7dc40439c5",
+    "title": "Câu 32: Mối quan hệ Pháp luật và Kinh tế",
+    "category": "Mối quan hệ Pháp luật và Kinh tế",
+    "questionType": "MC_CHOICE",
+    "question": "Trong mối quan hệ giữa pháp luật và kinh tế thì yếu tố nào quyết định yếu tố nào?",
+    "options": [
+      "Kinh tế và pháp luật tác động lẫn nhau.",
+      "Kinh tế quyết định pháp luật.",
+      "Pháp luật quyết định kinh tế.",
+      "Kinh tế và pháp luật đều giữ vai trò quyết định."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-a2773c03a5",
+    "title": "Câu 33: Vai trò Pháp luật XHCN",
+    "category": "Vai trò Pháp luật XHCN",
+    "questionType": "MC_CHOICE",
+    "question": "Khi nói về vai trò của pháp luật Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam, nhận định nào sau đây là sai?",
+    "options": [
+      "Pháp luật là phương tiện để duy trì bảo vệ trật tự xã hội.",
+      "Pháp luật là phương tiện để thể chế hóa đường lối của Đảng Cộng sản Việt Nam.",
+      "Pháp luật là phương tiện bảo vệ quyền con người, quyền công dân.",
+      "Pháp luật là phương tiện bảo vệ thiểu số giai cấp cầm quyền."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-67524c5473",
+    "title": "Câu 34: Án lệ trong Pháp luật Việt Nam",
+    "category": "Án lệ trong Pháp luật Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Cơ quan nào ở Việt Nam được phép ban hành án lệ?",
+    "options": [
+      "Quốc hội.",
+      "Công an.",
+      "Viện kiểm sát.",
+      "Tòa án."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-7b21aa9479",
+    "title": "Câu 35: Nguồn Pháp luật Việt Nam",
+    "category": "Nguồn Pháp luật Việt Nam",
+    "questionType": "MC_CHOICE",
+    "question": "Trong các tài liệu sau, tài liệu nào là nguồn của pháp luật Việt Nam?",
+    "options": [
+      "Giáo trình Lý luận nhà nước và pháp luật của các cơ sở giáo dục đại học.",
+      "Công văn hướng dẫn nghiệp vụ của cơ quan hành chính nhà nước.",
+      "Nghị quyết của Hội đồng thẩm phán Tòa án nhân dân tối cao.",
+      "Bài viết của chuyên gia đăng trên kỷ yếu khoa học."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-fc67000841",
+    "title": "Câu 36: Cơ cấu Quy phạm Pháp luật",
+    "category": "Cơ cấu Quy phạm Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Điều 34 Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025) quy định: “Công dân có quyền được bảo đảm an sinh xã hội”. Trong quy phạm pháp luật trên bao gồm những bộ phận nào?",
+    "options": [
+      "Giả định, quy định, chế tài.",
+      "Giả định, quy định.",
+      "Quy định, chế tài.",
+      "Giả định, chế tài."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-88d328f2f3",
+    "title": "Câu 37: Điều luật & Quy phạm Pháp luật",
+    "category": "Điều luật & Quy phạm Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nhận định nào sau đây là đúng?",
+    "options": [
+      "Điều luật và quy phạm pháp luật là hai khái niệm đồng nhất.",
+      "Mọi quy phạm pháp luật đều có đầy đủ ba bộ phận.",
+      "Điều luật là hình thức thể hiện quy phạm pháp luật.",
+      "Một điều luật chỉ có một quy phạm pháp luật."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-d3a1dbcabe",
+    "title": "Câu 38: Căn cứ phát sinh Quan hệ Pháp luật",
+    "category": "Căn cứ phát sinh Quan hệ Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Điều kiện làm phát sinh quan hệ pháp luật bao gồm?",
+    "options": [
+      "Chủ thể có năng lực chủ thể, khách thể, nội dung quan hệ pháp luật.",
+      "Chủ thể có năng lực chủ thể, quy phạm pháp luật, chế tài.",
+      "Quy phạm pháp luật, chủ thể có năng lực chủ thể, trách nhiệm pháp lý.",
+      "Chủ thể có năng lực chủ thể, quy phạm pháp luật, sự kiện pháp lý."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-5c0b88cd57",
+    "title": "Câu 39: Ý thức Pháp luật & Văn hóa Pháp lý",
+    "category": "Ý thức Pháp luật & Văn hóa Pháp lý",
+    "questionType": "MC_CHOICE",
+    "question": "Anh A tự giác đội mũ bảo hiểm khi đi xe mô tô dù không có cảnh sát giao thông kiểm tra. Hành vi của anh A phản ánh rõ nét yếu tố nào?",
+    "options": [
+      "Năng lực pháp luật.",
+      "Ý thức pháp luật.",
+      "Quan hệ pháp luật.",
+      "Trách nhiệm pháp lý."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-09b7287c2f",
+    "title": "Câu 40: Giải thích Pháp luật",
+    "category": "Giải thích Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Nhận định nào là sai về giải thích pháp luật không chính thức?",
+    "options": [
+      "Được thực hiện bởi các cá nhân, tổ chức không có thẩm quyền giải thích pháp luật.",
+      "Lời giải thích được trình bày dưới dạng văn bản hoặc lời nói.",
+      "Có hiệu lực bắt buộc đối với mọi đối tượng, chủ thể trong xã hội.",
+      "Thường xuất hiện trong quá trình nghiên cứu, giảng dạy, hoặc tuyên truyền pháp luật."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-f482e3c265",
+    "title": "Câu 41: Sự kiện Pháp lý",
+    "category": "Sự kiện Pháp lý",
+    "questionType": "MC_CHOICE",
+    "question": "Anh K ký hợp đồng thuê nhà của ông H. Sự kiện nào dưới đây làm phát sinh quan hệ pháp luật giữa anh K và ông H?",
+    "options": [
+      "Anh K chuyển đồ vào nhà thuê.",
+      "Anh K và ông H ký hợp đồng thuê nhà.",
+      "Ông H xây dựng căn nhà.",
+      "Anh K đăng ký tạm trú."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-9c84cde0b7",
+    "title": "Câu 42: Tuân thủ Pháp luật",
+    "category": "Tuân thủ Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Anh M không uống rượu bia khi lái xe, anh M thực hiện pháp luật bằng hình thức",
+    "options": [
+      "áp dụng pháp luật.",
+      "sử dụng pháp luật.",
+      "tuân thủ pháp luật.",
+      "thi hành pháp luật."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-90e83e83c7",
+    "title": "Câu 43: Sử dụng Pháp luật",
+    "category": "Sử dụng Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Chị H nộp hồ sơ đề nghị cơ quan có thẩm quyền cấp hộ chiếu để phục vụ nhu cầu du lịch nước ngoài. Hành vi của chị H là",
+    "options": [
+      "sử dụng pháp luật.",
+      "tuân thủ pháp luật.",
+      "thi hành pháp luật.",
+      "áp dụng pháp luật."
+    ],
+    "correctAnswer": 0,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-8299731c1e",
+    "title": "Câu 44: Áp dụng Pháp luật",
+    "category": "Áp dụng Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Hành vi nào dưới đây là áp dụng pháp luật?",
+    "options": [
+      "Nhà trường tổ chức tuyên truyền pháp luật cho học sinh.",
+      "Tòa án tuyên phạt bị cáo 5 năm tù.",
+      "Học sinh tự giác chấp hành kỉ luật trong trường học.",
+      "Công dân nộp thuế thu nhập cá nhân đúng hạn."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-cd8a9eb018",
+    "title": "Câu 45: Cấu thành Vi phạm Pháp luật",
+    "category": "Cấu thành Vi phạm Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "N (16 tuổi) tự ý điều khiển xe mô tô của gia đình đến trường học. Trên đường đi, N điều khiển xe lạng lách và vượt đèn đỏ. Nhận định nào sau đây là đúng?",
+    "options": [
+      "N không có năng lực trách nhiệm pháp lý vì N chưa đủ 18 tuổi.",
+      "N không có lỗi vì chưa gây ra thiệt hại gì.",
+      "Hành vi của N là hành vi trái pháp luật, có lỗi.",
+      "Hành vi của N không phải là hành vi nguy hiểm cho xã hội."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-bc06d6b44b",
+    "title": "Câu 46: Trách nhiệm Pháp lý",
+    "category": "Trách nhiệm Pháp lý",
+    "questionType": "MC_CHOICE",
+    "question": "Trách nhiệm pháp lý là",
+    "options": [
+      "nghĩa vụ của các chủ thể tham gia vào quan hệ xã hội.",
+      "hậu quả bất lợi mà cá nhân, tổ chức phải gánh chịu khi vi phạm pháp luật.",
+      "chế tài của quy phạm pháp luật.",
+      "lời xin lỗi khi gây thiệt hại cho người khác."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-60207a8d0b",
+    "title": "Câu 47: Hệ thống Pháp luật",
+    "category": "Hệ thống Pháp luật",
+    "questionType": "MC_CHOICE",
+    "question": "Yếu tố nào sau đây không là bộ phận cấu thành của hệ thống pháp luật?",
+    "options": [
+      "Văn bản quy phạm pháp luật.",
+      "Văn bản áp dụng pháp luật.",
+      "Ngành luật.",
+      "Hiến pháp."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-c34f5dd233",
+    "title": "Câu 48: Nghị quyết 66-NQ/TW & Cải cách Thể chế",
+    "category": "Nghị quyết 66-NQ/TW & Cải cách Thể chế",
+    "questionType": "MC_CHOICE",
+    "question": "Theo Nghị quyết số 66-NQ/TW ngày 30/4/2025 của Bộ Chính trị về đổi mới công tác xây dựng và thi hành pháp luật đáp ứng yêu cầu phát triển đất nước trong kỷ nguyên mới, mục tiêu đến năm 2030, Việt Nam có một hệ thống pháp luật",
+    "options": [
+      "đồng bộ làm cơ sở pháp lý cho hoạt động của bộ máy nhà nước theo mô hình chính quyền 3 cấp.",
+      "dân chủ, công bằng, đồng bộ, thống nhất, công khai, minh bạch, khả thi.",
+      "cơ bản hoàn thành việc tháo gỡ những “điểm nghẽn” do quy định pháp luật.",
+      "chất lượng, hiện đại, tiệm cận chuẩn mực, thông lệ quốc tế tiên tiến và phù hợp với thực tiễn đất nước. Đọc tình huống sau đây và trả lời các câu từ 49 đến 51. Anh M ký hợp đồng mua bán một chiếc máy tính của chị N với giá tiền là 30 triệu đồng và anh M phải thanh toán đủ tiền vào ngày 01/3/2026, chị N phải bàn giao chiếc máy tính vào ngày 05/3/2026. Sau đó, anh M đã thực hiện thanh toán đủ số tiền, đúng thời hạn nhưng chị N không bàn giao chiếc máy tính như cam kết."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-ba8fe174d7",
+    "title": "Câu 49: Tình huống Hợp đồng Dân sự",
+    "category": "Tình huống Hợp đồng Dân sự",
+    "questionType": "MC_SCENARIO",
+    "question": "Đọc tình huống: Anh M ký hợp đồng mua bán một chiếc máy tính của chị N với giá 30 triệu đồng, thanh toán đủ ngày 01/3/2026, giao máy ngày 05/3/2026. Anh M đã thanh toán đủ đúng hẹn nhưng chị N không bàn giao máy.\n\nCâu hỏi: Trong tình huống trên, quan hệ pháp luật về hợp đồng mua bán giữa anh M và chị N phát sinh kể từ thời điểm nào?",
+    "options": [
+      "Việc anh M thanh toán đầy đủ tiền mua chiếc máy tính của chị N.",
+      "Anh M soạn thảo hợp đồng mua chiếc máy tính với chị N.",
+      "Việc ký kết hợp đồng mua bán chiếc máy tính giữa anh M và chị N.",
+      "Chị N không bàn giao chiếc máy tính cho anh M."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-33813214b4",
+    "title": "Câu 50: Tình huống Quan hệ Pháp luật",
+    "category": "Tình huống Quan hệ Pháp luật",
+    "questionType": "MC_SCENARIO",
+    "question": "Tình huống anh M và chị N: Khi chị N không bàn giao chiếc máy tính đúng thời hạn theo thỏa thuận, quyền yêu cầu bàn giao chiếc máy tính thuộc về yếu tố nào trong quan hệ pháp luật?",
+    "options": [
+      "Chủ thể của quan hệ pháp luật.",
+      "Nội dung của quan hệ pháp luật.",
+      "Khách thể của quan hệ pháp luật.",
+      "Năng lực pháp luật của chủ thể."
+    ],
+    "correctAnswer": 1,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-de27681083",
+    "title": "Câu 51: Tình huống Khách thể Pháp lý",
+    "category": "Tình huống Khách thể Pháp lý",
+    "questionType": "MC_SCENARIO",
+    "question": "Tình huống anh M và chị N: Khách thể trong quan hệ pháp luật về hợp đồng mua bán chiếc máy tính trên được xác định là gì?",
+    "options": [
+      "anh M và chị N.",
+      "quyền và nghĩa vụ của anh M và chị N trong hợp đồng.",
+      "chiếc máy tính, hành vi pháp lý đúng đắn của anh M và chị N.",
+      "hợp đồng mua bán chiếc máy tính. Đọc tình huống sau đây và trả lời các câu từ 52 đến 54. P và Q là nhân viên công ty X. Hai người đã thống nhất kế hoạch chiếm đoạt một số tài sản (ước tính giá trị tài sản khoảng 10 triệu đồng) thuộc sở hữu của công ty. Trong quá trình thực hiện, P khi đang đưa tài sản xuống tầng hầm của công ty để đến điểm hẹn giao cho Q thì bị bảo vệ công ty phát hiện."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-2dddc0ddf4",
+    "title": "Câu 52: Tình huống Vi phạm Pháp luật (Mặt chủ quan)",
+    "category": "Tình huống Vi phạm Pháp luật (Mặt chủ quan)",
+    "questionType": "MC_SCENARIO",
+    "question": "Đọc tình huống: P và Q là nhân viên công ty X thống nhất kế hoạch chiếm đoạt tài sản (khoảng 10 triệu đồng) của công ty. Trong lúc P đang đưa tài sản xuống tầng hầm để giao cho Q thì bị bảo vệ phát hiện.\n\nCâu hỏi: Dấu hiệu nào thuộc mặt chủ quan của vi phạm pháp luật trên?",
+    "options": [
+      "Tài sản thuộc sở hữu công ty X.",
+      "Hành vi của P giao tài sản cho Q.",
+      "P và Q nhận thức rõ tính trái pháp luật của hành vi và mong muốn thực hiện.",
+      "Hành vi bàn bạc, thống nhất kế hoạch chiếm đoạt tài sản của P và Q."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-cf16310940",
+    "title": "Câu 53: Tình huống Căn cứ Trách nhiệm Pháp lý",
+    "category": "Tình huống Căn cứ Trách nhiệm Pháp lý",
+    "questionType": "MC_SCENARIO",
+    "question": "Tình huống P và Q: Căn cứ nào trực tiếp làm phát sinh trách nhiệm pháp lý của P và Q?",
+    "options": [
+      "Ý định chiếm đoạt tài sản xuất hiện trong suy nghĩ của P và Q.",
+      "Tài sản thuộc sở hữu của công ty X.",
+      "Sự phát hiện của người người bảo vệ đối với hành vi chiếm đoạt tài sản của P và Q.",
+      "Hành vi chiếm đoạt tài sản của P và Q được thực hiện với lỗi cố ý."
+    ],
+    "correctAnswer": 3,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-c3e17b78e6",
+    "title": "Câu 54: Tình huống Đồng phạm & Trách nhiệm Pháp lý",
+    "category": "Tình huống Đồng phạm & Trách nhiệm Pháp lý",
+    "questionType": "MC_SCENARIO",
+    "question": "Tình huống P và Q: Nhận định nào sau đây là đúng với tình huống trên?",
+    "options": [
+      "P chịu trách nhiệm pháp lý vì P là người trực tiếp thực hiện hành vi, Q chưa nhận được tài sản từ P nên không liên đới trách nhiệm.",
+      "Không phát sinh trách nhiệm pháp lý vì tài sản chưa bị dịch chuyển khỏi địa điểm công ty X.",
+      "Việc xem xét trách nhiệm pháp lý phải căn cứ hành vi trái pháp luật; có lỗi của P và Q không chỉ căn cứ vào hậu quả.",
+      "Hành vi của P và Q chưa chiếm đoạt được tài sản nên chỉ vi phạm quy tắc đạo đức nghề nghiệp."
+    ],
+    "correctAnswer": 2,
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-6c1800a912",
+    "title": "Câu 55: Điền khuyết: Hình thức Cấu trúc Nhà nước",
+    "category": "Điền khuyết: Hình thức Cấu trúc Nhà nước",
+    "questionType": "MC_FILL",
+    "question": "Quốc gia A có một bản Hiến pháp, một hệ thống pháp luật thống nhất, một hệ thống cơ quan nhà nước thống nhất từ trung ương đến địa phương và các đơn vị hành chính không có chủ quyền riêng. Quốc gia A có hình thức cấu trúc nhà nước nào? Trả lời:___________________",
+    "options": [
+      "Nhà nước đơn nhất",
+      "Nhà nước liên bang",
+      "Nhà nước liên minh",
+      "Nhà nước tự trị"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "Nhà nước đơn nhất",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-5dcf7aec34",
+    "title": "Câu 56: Điền khuyết: Nguyên tắc Bộ máy Nhà nước",
+    "category": "Điền khuyết: Nguyên tắc Bộ máy Nhà nước",
+    "questionType": "MC_FILL",
+    "question": "Tổ chức và hoạt động của Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam bảo đảm sự chỉ đạo, lãnh đạo tập trung thống nhất của trung ương với địa phương, của cấp trên với cấp dưới; đồng thời, phải phát huy tính tích cực, chủ động, sáng tạo của địa phương và cấp dưới nhưng luôn phải đảm bảo sự tập trung thống nhất của cấp trên thể hiện nguyên tắc _________. Trả lời:__________",
+    "options": [
+      "Tập trung dân chủ",
+      "Quyền lực thống nhất",
+      "Pháp chế xã hội chủ nghĩa",
+      "Nhân dân làm chủ"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "Tập trung dân chủ",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-bb217d0b48",
+    "title": "Câu 57: Điền khuyết: Pháp luật & Đạo đức",
+    "category": "Điền khuyết: Pháp luật & Đạo đức",
+    "questionType": "MC_FILL",
+    "question": "Có bao nhiêu nhận định đúng trong các nhận định sau đây? (1) Trong mối quan hệ pháp luật với đạo đức thì pháp luật và đạo đức hoàn toàn độc lập. (2) Trong mối quan hệ pháp luật với đạo đức thì đạo đức có vai trò hỗ trợ cho việc xây dựng pháp luật. (3) Trong mối quan hệ pháp luật với đạo đức thì pháp luật có vai trò ghi nhận các quy phạm đạo đức tốt đẹp. (4) Trong mối quan hệ pháp luật với đạo đức thì pháp luật có vai trò loại bỏ các quy phạm đạo đức lỗi thời. (5) Trong mối quan hệ pháp luật với đạo đức thì pháp luật góp phần hình thành các quan niệm đạo đức mới. (6) Trong mối quan hệ pháp luật với đạo đức thì pháp luật không ngăn cấm, không loại trừ mọi quy phạm đạo đức. Trả lời:__________",
+    "options": [
+      "4",
+      "3",
+      "5",
+      "2"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "4",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-db5f6507e8",
+    "title": "Câu 58: Điền khuyết: Năng lực Pháp luật",
+    "category": "Điền khuyết: Năng lực Pháp luật",
+    "questionType": "MC_FILL",
+    "question": "Năng lực nào của một cá nhân phản ánh khả năng được nhà nước thừa nhận có các quyền và nghĩa pháp lý theo quy định pháp luật, xuất hiện kể từ khi cá nhân được sinh ra? Trả lời:__________",
+    "options": [
+      "Năng lực pháp luật",
+      "Năng lực hành vi",
+      "Năng lực trách nhiệm",
+      "Năng lực chủ thể"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "Năng lực pháp luật",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-40ff6be0b1",
+    "title": "Câu 59: Điền khuyết: Lỗi trong Vi phạm Pháp luật",
+    "category": "Điền khuyết: Lỗi trong Vi phạm Pháp luật",
+    "questionType": "MC_FILL",
+    "question": "Bác sĩ X được giao nhiệm vụ thực hiện ca phẫu thuật cho bệnh nhân Y. Trong quá trình thực hiện nhiệm vụ, do không cẩn thận bác sĩ X đã để quên gạc y tế trong ổ bụng của bệnh nhân khiến bệnh nhân bị nhiễm trùng nặng sau 1 tuần xuất viện. Lỗi của bác sĩ X trong trường hợp này là gì? Trả lời:__________",
+    "options": [
+      "Vô ý do cẩu thả",
+      "Vô ý vì quá tự tin",
+      "Cố ý gián tiếp",
+      "Cố ý trực tiếp"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "Vô ý do cẩu thả",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "mc-5589fc0dd3",
+    "title": "Câu 60: Điền khuyết: Trách nhiệm Kỷ luật Viên chức",
+    "category": "Điền khuyết: Trách nhiệm Kỷ luật Viên chức",
+    "questionType": "MC_FILL",
+    "question": "Anh H là viên chức cơ quan nhà nước, do tự ý nghỉ việc không xin phép liên tục nhiều ngày làm việc nên đã bị xử lý bằng hình thức buộc thôi việc. Trách nhiệm pháp lý nào được áp dụng đối với anh H? Trả lời:__________",
+    "options": [
+      "Trách nhiệm kỷ luật",
+      "Trách nhiệm hành chính",
+      "Trách nhiệm dân sự",
+      "Trách nhiệm hình sự"
+    ],
+    "correctAnswer": 0,
+    "textAnswer": "Trách nhiệm kỷ luật",
+    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
+    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
+  },
+  {
+    "id": "essay-bfaf8e4159",
+    "title": "PHẦN I: TỰ LUẬN (30 điểm)",
+    "category": "Nghị luận Lý luận CAND & Tư tưởng Hồ Chí Minh",
+    "questionType": "ESSAY",
+    "question": "Chủ tịch Hồ Chí Minh khẳng định: “Tương lai thuộc về thanh niên. Tương lai là cách mạng luôn tiến lên. Là chủ của tương lai, thanh niên không thể không có lý tưởng cao cả. Vì vậy thanh niên phải có cuộc sống chính trị tích cực và cách mạng.”. (Hồ Chí Minh toàn tập, Tập 12. NXB Chính trị quốc gia - Sự thật, 2011, trang 519)\n\nAnh/chị hãy viết một bài nghị luận (tối thiểu 500 chữ) trình bày cách hiểu của mình về nội dung đoạn trích trên và liên hệ với vai trò của thanh niên trong giai đoạn hiện nay.",
+    "options": [],
+    "correctAnswer": 0,
+    "sampleEssay": "DÀN Ý & BÀI LÀM GỢI Ý CHUẨN T05:\n\nI. MỞ BÀI:\n- Dẫn dắt tư tưởng Hồ Chí Minh về vị trí chiến lược của thanh niên trong sự nghiệp cách mạng: \"Thanh niên là người chủ tương lai của nước nhà\".\n- Trích dẫn câu nói của Bác: “Tương lai thuộc về thanh niên. Tương lai là cách mạng luôn tiến lên...”.\n- Khẳng định tính thời sự và định hướng kim chỉ nam đối với tuổi trẻ, đặc biệt là thế hệ thanh niên Công an nhân dân trong kỷ nguyên mới.\n\nII. THÂN BÀI:\n1. Giải thích và phân tích nội dung câu nói của Bác (10 điểm):\n- \"Tương lai thuộc về thanh niên\": Khẳng định vai trò tiếp nối lịch sử, là lực lượng xung kích gánh vác sứ mệnh dân tộc.\n- \"Tương lai là cách mạng luôn tiến lên\": Cách mạng là dòng chảy liên tục, đòi hỏi sự đổi mới, sáng tạo không ngừng.\n- \"Thanh niên không thể không có lý tưởng cao cả\": Lý tưởng độc lập dân tộc gắn liền với CNXH; phụng sự Tổ quốc, phục vụ nhân dân.\n- \"Cuộc sống chính trị tích cực và cách mạng\": Không thờ ơ chính trị, chủ động rèn luyện bản lĩnh, sẵn sàng cống hiến.\n\n2. Bàn luận và liên hệ thực tiễn với thanh niên hiện nay (14 điểm):\n- Thời cơ và thách thức của kỷ nguyên số, hội nhập quốc tế và các âm mưu diễn biến hòa bình.\n- Vai trò của thanh niên trong phát triển kinh tế - xã hội, bảo vệ an ninh trật tự, tiên phong làm chủ khoa học công nghệ.\n- Phê phán lối sống thực dụng, phai nhạt lý tưởng, \"tự diễn biến\", \"tự chuyển hóa\" ở một bộ phận giới trẻ.\n- Trách nhiệm đặc thù của đoàn viên, thanh niên CAND: Khắc ghi Sáu điều Bác Hồ dạy CAND, bảo vệ Đảng, bảo vệ Nhà nước và giữ vững bình yên cuộc sống.\n\nIII. KẾT BÀI:\n- Khẳng định giá trị trường tồn trong lời căn dặn của Bác.\n- Lời hứa hành động: Không ngừng học tập, tu dưỡng đạo đức cách mạng, phấn đấu xứng danh người chiến sĩ CAND \"Vì nước quên thân, vì dân phục vụ\".",
+    "explanation": "Đáp ứng chuẩn thang điểm chấm thi CAND: Phân tích tư tưởng (10đ) + Liên hệ thực tiễn bản thân và CAND (14đ) + Kỹ năng lập luận, chính tả (6đ).",
+    "legalReference": "Hồ Chí Minh toàn tập (Tập 12, tr. 519) - Đề cương thi tuyển sinh Văn bằng 2 CAND."
+  }
+]
