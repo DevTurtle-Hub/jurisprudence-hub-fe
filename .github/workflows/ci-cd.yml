@@ -68,6 +68,33 @@ jobs:
       - name: 📦 Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: 🔐 Validate Vercel Secrets Configuration
+        run: |
+          MISSING_SECRETS=""
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_TOKEN"
+          fi
+          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_ORG_ID"
+          fi
+          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_PROJECT_ID"
+          fi
+
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "=========================================================="
+            echo "❌ LỖI: Chưa cấu hình các GitHub Secrets sau:$MISSING_SECRETS"
+            echo "=========================================================="
+            echo "Để Vercel CLI có quyền deploy tự động, bạn cần thêm 3 Secrets vào GitHub:"
+            echo "👉 Vào: GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret"
+            echo "   1. VERCEL_TOKEN: Token từ https://vercel.com/account/tokens"
+            echo "   2. VERCEL_ORG_ID: Team ID hoặc User ID trên Vercel"
+            echo "   3. VERCEL_PROJECT_ID: Project ID trong Settings của Project trên Vercel"
+            echo "=========================================================="
+            exit 1
+          fi
+          echo "✅ Đã tìm thấy đầy đủ Vercel Secrets (VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID)!"
+
       - name: 📥 Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 

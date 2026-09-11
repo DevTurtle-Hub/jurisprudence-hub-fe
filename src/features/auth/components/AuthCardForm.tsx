@@ -94,7 +94,11 @@ export function AuthCardForm({
       if (onClose) onClose()
     } catch (err: unknown) {
       console.error('Lỗi xác thực:', err)
-      const axiosErr = err as { response?: { status?: number; data?: { message?: string; code?: string } }; message?: string }
+      const axiosErr = err as {
+        response?: { status?: number; data?: { message?: string; code?: string } }
+        message?: string
+        code?: string
+      }
       const status = axiosErr.response?.status
       const serverMessage = axiosErr.response?.data?.message
 
@@ -103,6 +107,10 @@ export function AuthCardForm({
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         setError(serverMessage || 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại thông tin.')
+      } else if (axiosErr.code === 'ECONNABORTED' || axiosErr.message?.includes('timeout')) {
+        setError('Máy chủ Backend (Render) phản hồi quá lâu hoặc đang trong trạng thái khởi động (Cold-start). Vui lòng thử lại sau 30 giây.')
+      } else if (!axiosErr.response) {
+        setError('Không thể kết nối đến Backend (Render). Vui lòng kiểm tra lại cấu hình VITE_API_URL hoặc CORS trên máy chủ.')
       } else {
         setError(serverMessage || axiosErr.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.')
       }

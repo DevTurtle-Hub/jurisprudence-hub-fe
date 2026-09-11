@@ -29,7 +29,10 @@ export const AuthApi = {
     delete apiClient.defaults.headers.common.Authorization;
 
     const res = await apiClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/login', payload);
-    const data = res.data.data;
+    const data = res.data?.data;
+    if (!data || !data.tokens) {
+      throw new Error('Không thể kết nối API hoặc phản hồi không đúng định dạng. Vui lòng kiểm tra lại VITE_API_URL trên Vercel.');
+    }
     localStorage.setItem('access_token', data.tokens.accessToken);
     localStorage.setItem('refresh_token', data.tokens.refreshToken);
     localStorage.setItem('user_info', JSON.stringify(data.user));
@@ -43,7 +46,10 @@ export const AuthApi = {
     delete apiClient.defaults.headers.common.Authorization;
 
     const res = await apiClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/register', payload);
-    const data = res.data.data;
+    const data = res.data?.data;
+    if (!data || !data.tokens) {
+      throw new Error('Không thể kết nối API hoặc phản hồi không đúng định dạng. Vui lòng kiểm tra lại VITE_API_URL trên Vercel.');
+    }
     localStorage.setItem('access_token', data.tokens.accessToken);
     localStorage.setItem('refresh_token', data.tokens.refreshToken);
     localStorage.setItem('user_info', JSON.stringify(data.user));

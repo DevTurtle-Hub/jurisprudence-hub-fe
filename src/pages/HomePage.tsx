@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   UserCheck,
   ExternalLink,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -20,104 +21,38 @@ import { DocumentApi } from '@/services/api'
 import { examApi } from '@/services/examApi'
 import type { ChapterResponse } from '@/types/api'
 
-// Dữ liệu dự phòng chuẩn theo cơ sở dữ liệu T05 để hiển thị mượt mà không độ trễ
-const DEFAULT_CHAPTERS: ChapterResponse[] = [
-  {
-    id: "ch-1",
-    title: "Chương 1. Nguồn gốc, bản chất và đặc trưng của Nhà nước",
-    order: 1,
-    lessons: [
-      { id: "lesson-1-1", chapterId: "ch-1", title: "Bài 1: Nguồn gốc của Nhà nước", order: 1 },
-      { id: "lesson-1-2", chapterId: "ch-1", title: "Bài 2: Bản chất của Nhà nước", order: 2 },
-      { id: "lesson-1-3", chapterId: "ch-1", title: "Bài 3: Đặc trưng của Nhà nước", order: 3 },
-      { id: "lesson-1-4", chapterId: "ch-1", title: "Bài 4: Chức năng của Nhà nước", order: 4 },
-    ],
-    createdAt: "",
-    updatedAt: ""
-  },
-  {
-    id: "ch-2",
-    title: "Chương 2. Kiểu Nhà nước và hình thức Nhà nước",
-    order: 2,
-    lessons: [
-      { id: "lesson-2-1", chapterId: "ch-2", title: "Bài 1: Khái niệm kiểu Nhà nước", order: 1 },
-      { id: "lesson-2-2", chapterId: "ch-2", title: "Bài 2: Các kiểu Nhà nước trong lịch sử", order: 2 },
-      { id: "lesson-2-3", chapterId: "ch-2", title: "Bài 3: Hình thức Nhà nước", order: 3 },
-      { id: "lesson-2-4", chapterId: "ch-2", title: "Bài 4: Hình thức chính thể", order: 4 },
-      { id: "lesson-2-5", chapterId: "ch-2", title: "Bài 5: Hình thức cấu trúc Nhà nước", order: 5 },
-      { id: "lesson-2-6", chapterId: "ch-2", title: "Bài 6: Chế độ chính trị", order: 6 },
-    ],
-    createdAt: "",
-    updatedAt: ""
-  },
-  {
-    id: "ch-3",
-    title: "Chương 3. Bộ máy Nhà nước",
-    order: 3,
-    lessons: [
-      { id: "lesson-3-1", chapterId: "ch-3", title: "Bài 1: Khái niệm bộ máy Nhà nước", order: 1 },
-      { id: "lesson-3-2", chapterId: "ch-3", title: "Bài 2: Nguyên tắc tổ chức và hoạt động", order: 2 },
-      { id: "lesson-3-3", chapterId: "ch-3", title: "Bài 3: Cơ quan Nhà nước", order: 3 },
-      { id: "lesson-3-4", chapterId: "ch-3", title: "Bài 4: Phân loại cơ quan Nhà nước", order: 4 },
-    ],
-    createdAt: "",
-    updatedAt: ""
-  },
-  {
-    id: "ch-4",
-    title: "Chương 4. Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam",
-    order: 4,
-    lessons: [
-      { id: "lesson-4-1", chapterId: "ch-4", title: "Bài 1: Bản chất của Nhà nước Việt Nam", order: 1 },
-      { id: "lesson-4-2", chapterId: "ch-4", title: "Bài 2: Chức năng của Nhà nước Việt Nam", order: 2 },
-      { id: "lesson-4-3", chapterId: "ch-4", title: "Bài 3: Nguyên tắc tổ chức và hoạt động", order: 3 },
-      { id: "lesson-4-4", chapterId: "ch-4", title: "Bài 4: Hệ thống cơ quan Nhà nước", order: 4 },
-      { id: "lesson-4-5", chapterId: "ch-4", title: "Bài 5: Quốc hội", order: 5 },
-      { id: "lesson-4-6", chapterId: "ch-4", title: "Bài 6: Chủ tịch nước", order: 6 },
-      { id: "lesson-4-7", chapterId: "ch-4", title: "Bài 7: Chính phủ", order: 7 },
-      { id: "lesson-4-8", chapterId: "ch-4", title: "Bài 8: Tòa án nhân dân", order: 8 },
-      { id: "lesson-4-9", chapterId: "ch-4", title: "Bài 9: Viện kiểm sát nhân dân", order: 9 },
-      { id: "lesson-4-10", chapterId: "ch-4", title: "Bài 10: Chính quyền địa phương", order: 10 },
-    ],
-    createdAt: "",
-    updatedAt: ""
-  },
-  {
-    id: "ch-5",
-    title: "Chương 5. Nguồn gốc, bản chất và đặc trưng của pháp luật",
-    order: 5,
-    lessons: [
-      { id: "lesson-5-1", chapterId: "ch-5", title: "Bài 1: Nguồn gốc của pháp luật", order: 1 },
-      { id: "lesson-5-2", chapterId: "ch-5", title: "Bài 2: Bản chất của pháp luật", order: 2 },
-      { id: "lesson-5-3", chapterId: "ch-5", title: "Bài 3: Đặc trưng của pháp luật", order: 3 },
-      { id: "lesson-5-4", chapterId: "ch-5", title: "Bài 4: Vai trò của pháp luật", order: 4 },
-    ],
-    createdAt: "",
-    updatedAt: ""
-  },
-]
-
 export function HomePage() {
   const navigate = useNavigate()
   const { isLoggedIn, currentUser, openAuthModal } = useAuth()
 
-  const [chapters, setChapters] = useState<ChapterResponse[]>(DEFAULT_CHAPTERS)
+  const [chapters, setChapters] = useState<ChapterResponse[]>([])
+  const [isLoadingChapters, setIsLoadingChapters] = useState<boolean>(true)
   const [examRoomsCount, setExamRoomsCount] = useState<number>(0)
-  const [selectedChapterId, setSelectedChapterId] = useState<string>('ch-1')
+  const [selectedChapterId, setSelectedChapterId] = useState<string>('')
 
-  // Lấy dữ liệu thật từ Backend API
+  // Lấy dữ liệu thật 100% từ Backend Database (Không dùng mock data)
   useEffect(() => {
     let isMounted = true
 
     const loadRealData = async () => {
       try {
+        setIsLoadingChapters(true)
         const chData = await DocumentApi.getChapters(true)
-        if (isMounted && Array.isArray(chData) && chData.length > 0) {
-          setChapters(chData)
-          setSelectedChapterId(chData[0].id)
+        if (isMounted) {
+          if (Array.isArray(chData)) {
+            setChapters(chData)
+            if (chData.length > 0) {
+              setSelectedChapterId(chData[0].id)
+            }
+          } else {
+            setChapters([])
+          }
         }
       } catch (err) {
-        console.warn('Sử dụng dữ liệu giáo trình chuẩn T05:', err)
+        console.warn('Không thể tải danh sách chương từ máy chủ:', err)
+        if (isMounted) setChapters([])
+      } finally {
+        if (isMounted) setIsLoadingChapters(false)
       }
 
       try {
@@ -393,84 +328,99 @@ export function HomePage() {
             </button>
           </div>
 
-          {/* Danh sách tab chọn chương pha màu hiện đại (5 Chương thật từ DB) */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {chapters.map((ch, idx) => {
-              const isSelected = ch.id === selectedChapterId
-              return (
-                <button
-                  key={ch.id}
-                  onClick={() => setSelectedChapterId(ch.id)}
-                  className={cn(
-                    "px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0",
-                    isSelected
-                      ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30 scale-[1.02]"
-                      : "bg-slate-100/90 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60"
-                  )}
-                >
-                  Chương {idx + 1} ({ch.lessons?.length || 0} bài)
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Chi tiết chương đang chọn & các bài giảng bên trong */}
-          {activeChapter && (
-            <div className="space-y-3.5 pt-1">
-              
-              {/* Banner tóm tắt chương với gradient dịu mắt */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-blue-50/60 dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-blue-950/30 border border-indigo-200/60 dark:border-indigo-800/40 shadow-2xs flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded-full">
-                      Chuyên đề trọng tâm
-                    </span>
-                  </div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-                    {activeChapter.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Bao gồm {activeChapter.lessons?.length || 0} bài giảng lý luận chuyên sâu và câu hỏi thực hành CAND
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => navigate('/documents')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors shrink-0 cursor-pointer hidden sm:inline-flex items-center gap-1"
-                >
-                  <span>Mở Chương</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-
-              {/* Danh sách bài giảng thật dạng lưới đa cột */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {activeChapter.lessons?.map((lesson, idx) => (
-                  <div
-                    key={lesson.id}
-                    onClick={() => navigate(`/documents/${lesson.id}`)}
-                    className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50/60 dark:from-slate-900 dark:to-slate-900/60 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex items-start justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/40">
-                          Bài {idx + 1}
-                        </span>
-                        <span className="text-[10.5px] text-slate-400 font-medium">8 khối học thuật</span>
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
-                        {lesson.title}
-                      </h4>
-                    </div>
-
-                    <div className="p-1 rounded-lg text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:translate-x-0.5 transition-all shrink-0 mt-1">
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
+          {/* Danh sách tab chọn chương (Dữ liệu thật 100% từ Database) */}
+          {isLoadingChapters ? (
+            <div className="py-12 text-center text-slate-400">
+              <Loader2 className="h-7 w-7 animate-spin mx-auto mb-2.5 text-indigo-500" />
+              <span className="text-xs font-semibold">Đang đồng bộ dữ liệu từ máy chủ...</span>
             </div>
+          ) : chapters.length === 0 ? (
+            <div className="py-12 text-center text-slate-500 dark:text-slate-400 bg-slate-50/60 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+              <BookOpen className="h-9 w-9 mx-auto text-slate-400 dark:text-slate-500 mb-2 opacity-60" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Chưa có chương giáo trình nào trong CSDL</p>
+              <p className="text-xs text-slate-400 mt-1">Dữ liệu từ Database sẽ tự động hiển thị tại đây khi bạn tạo chương mới</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {chapters.map((ch, idx) => {
+                  const isSelected = ch.id === selectedChapterId
+                  return (
+                    <button
+                      key={ch.id}
+                      onClick={() => setSelectedChapterId(ch.id)}
+                      className={cn(
+                        "px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0",
+                        isSelected
+                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/30 scale-[1.02]"
+                          : "bg-slate-100/90 hover:bg-slate-200/80 text-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60"
+                      )}
+                    >
+                      Chương {idx + 1} ({ch.lessons?.length || 0} bài)
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Chi tiết chương đang chọn & các bài giảng bên trong */}
+              {activeChapter && (
+                <div className="space-y-3.5 pt-1">
+                  
+                  {/* Banner tóm tắt chương với gradient dịu mắt */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-blue-50/60 dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-blue-950/30 border border-indigo-200/60 dark:border-indigo-800/40 shadow-2xs flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded-full">
+                          Chuyên đề trọng tâm
+                        </span>
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                        {activeChapter.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Bao gồm {activeChapter.lessons?.length || 0} bài giảng lý luận chuyên sâu và câu hỏi thực hành CAND
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => navigate('/documents')}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors shrink-0 cursor-pointer hidden sm:inline-flex items-center gap-1"
+                    >
+                      <span>Mở Chương</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Danh sách bài giảng thật dạng lưới đa cột */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {activeChapter.lessons?.map((lesson, idx) => (
+                      <div
+                        key={lesson.id}
+                        onClick={() => navigate(`/documents/${lesson.id}`)}
+                        className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50/60 dark:from-slate-900 dark:to-slate-900/60 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex items-start justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <span className="text-[10px] font-black uppercase text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2 py-0.5 rounded-md border border-indigo-200/60 dark:border-indigo-800/40">
+                              Bài {idx + 1}
+                            </span>
+                            <span className="text-[10.5px] text-slate-400 font-medium">8 khối học thuật</span>
+                          </div>
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                            {lesson.title}
+                          </h4>
+                        </div>
+
+                        <div className="p-1 rounded-lg text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:translate-x-0.5 transition-all shrink-0 mt-1">
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              )}
+            </>
           )}
 
         </div>
