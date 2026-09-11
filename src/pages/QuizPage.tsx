@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   CheckCircle2,
   XCircle,
@@ -7,27 +7,35 @@ import {
   RotateCcw,
   Award,
   Sparkles,
-  Layers,
-  BookOpen,
-  Shuffle,
   ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
-  Zap,
   Bookmark,
-  BookmarkCheck,
   Loader2,
-  FileText,
-  PenTool,
-  HelpCircle,
-  Check,
-  Type
+  Copy,
+  X,
+  Check
 } from 'lucide-react'
+import {
+  RealisticQuiz3DIcon,
+  RealisticEssay3DIcon,
+  RealisticFlashcard3DIcon,
+  RealisticLayers3DIcon,
+  RealisticScale3DIcon,
+  RealisticTypography3DIcon,
+  RealisticNotebook3DIcon,
+  RealisticRibbon3DIcon,
+  RealisticDice3DIcon,
+  RealisticVault3DIcon,
+  RealisticPdf3DIcon
+} from '@/components/common/RealisticExamIcons'
 import { cn } from '@/lib/utils'
 import { questionBankApi } from '@/services/questionBankApi'
 import type { QuestionBankResponse } from '@/types/questionBank'
 import { toast } from 'sonner'
+import { classifyQuestion } from '@/constants/questionClassification'
+import { exportElementToPdf } from '@/lib/pdfExport'
 
 // Các phân loại đề ôn luyện:
 // ALL: Tất cả câu hỏi
@@ -52,1029 +60,11 @@ interface QuizQuestionItem {
   legalReference?: string
 }
 
-// Danh sách câu hỏi dự phòng (Fallback) khi chưa tải hoặc ngân hàng câu hỏi trống
-const FALLBACK_QUESTIONS: QuizQuestionItem[] = [
-  {
-    "id": "mc-25624a860d",
-    "title": "Câu 1: Bản chất Nhà nước",
-    "category": "Bản chất Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Hoạt động nào sau đây thể hiện bản chất giai cấp của nhà nước?",
-    "options": [
-      "Phát triển văn hóa, xã hội.",
-      "Phát triển khoa học, công nghệ.",
-      "Bảo vệ giai cấp bị trị.",
-      "Bảo vệ giai cấp thống trị."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-637c4daad6",
-    "title": "Câu 2: Chức năng Nhà nước",
-    "category": "Chức năng Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Việc nhà nước mở rộng chương trình hỗ trợ hộ nghèo và tạo việc làm cho người dân thuộc chức năng nào sau đây của nhà nước?",
-    "options": [
-      "Chức năng đối nội.",
-      "Chức năng đối ngoại.",
-      "Chức năng bảo vệ Tổ quốc.",
-      "Chức năng quốc phòng."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-8220f3867f",
-    "title": "Câu 3: Đặc trưng Pháp luật",
-    "category": "Đặc trưng Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Thuộc tính nào sau đây không là đặc trưng của pháp luật?",
-    "options": [
-      "Tính quy phạm phổ biến.",
-      "Tính tùy nghi về hình thức.",
-      "Tính hệ thống.",
-      "Tính quyền lực nhà nước."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-0957546770",
-    "title": "Câu 4: Nguồn Pháp luật",
-    "category": "Nguồn Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nguồn của pháp luật được hiểu là",
-    "options": [
-      "ý kiến đóng góp của các tổ chức, cá nhân về các vấn đề kinh tế, văn hóa, xã hội.",
-      "hình thức chứa đựng và thể hiện các quy phạm pháp luật do nhà nước ban hành hoặc thừa nhận.",
-      "tất cả nguyên tắc đạo đức được truyền miệng qua nhiều thế hệ.",
-      "nơi lưu trữ văn bản, tài liệu trong các thư viện."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-db8668007a",
-    "title": "Câu 5: Quan hệ Pháp luật",
-    "category": "Quan hệ Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nghĩa vụ chủ thể trong nội dung của quan hệ pháp luật được hiểu là",
-    "options": [
-      "cách xử sự mang tính tùy nghi thực hiện theo ý muốn chủ quan của chủ thể.",
-      "cách xử sự bắt buộc mà nhà nước yêu cầu chủ thể phải thực hiện.",
-      "quyền yêu cầu của cơ quan hành chính nhà nước với cơ quan lập pháp.",
-      "sự tự giác thực hiện của chủ thể mà không kèm theo chế tài."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-fb25a1da45",
-    "title": "Câu 6: Thực hiện Pháp luật",
-    "category": "Thực hiện Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Hình thức thực hiện pháp luật nào đòi hỏi các chủ thể pháp luật phải kiềm chế không thực hiện các hành vi bị pháp luật cấm?",
-    "options": [
-      "Sử dụng pháp luật.",
-      "Thi hành pháp luật.",
-      "Tuân thủ pháp luật.",
-      "Áp dụng pháp luật."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-9bd4d4084f",
-    "title": "Câu 7: Hình thức Áp dụng Pháp luật",
-    "category": "Hình thức Áp dụng Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nhận định nào sau đây là đúng?",
-    "options": [
-      "Sử dụng pháp luật mang tính bắt buộc, áp dụng pháp luật mang tính tùy nghi.",
-      "Sử dụng pháp luật do cá nhân thực hiện, áp dụng pháp luật do tổ chức thực hiện.",
-      "Sử dụng pháp luật là quyền lựa chọn hành vi pháp lý, áp dụng pháp luật là hoạt động nhân danh nhà nước ra quyết định pháp lý cá biệt.",
-      "Sử dụng pháp luật do tổ chức thực hiện, áp dụng pháp luật do cá nhân có thẩm quyền thực hiện mang tính sáng tạo và linh hoạt."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-b64dd9da16",
-    "title": "Câu 8: Vi phạm Pháp luật",
-    "category": "Vi phạm Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Yếu tố nào sau đây thuộc mặt khách quan của cấu thành vi phạm pháp luật?",
-    "options": [
-      "Động cơ, mục đích sai trái thúc đẩy chủ thể thực hiện hành vi vi phạm pháp luật.",
-      "Lỗi cố ý trực tiếp, lỗi cố ý gián tiếp, lỗi vô ý do cẩu thả, lỗi vô ý vì quá tự tin.",
-      "Các quan hệ xã hội được pháp luật bảo vệ bị hành vi trái pháp luật xâm hại.",
-      "Hành vi trái pháp luật, hậu quả thiệt hại cho xã hội do hành vi trái pháp luật gây ra."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-91f2b1a324",
-    "title": "Câu 9: Nguồn gốc Nhà nước",
-    "category": "Nguồn gốc Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Theo quan điểm của chủ nghĩa Mác - Lênin, nhà nước ra đời do nguyên nhân nào sau đây?",
-    "options": [
-      "Do nhu cầu của số đông người trong xã hội.",
-      "Do chiến tranh giữa các bộ lạc.",
-      "Do thỏa thuận của các thành viên trong xã hội.",
-      "Do mâu thuẫn giai cấp đến mức không thể điều hòa được."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-cb20b4be76",
-    "title": "Câu 10: Bản chất & Tính xã hội",
-    "category": "Bản chất & Tính xã hội",
-    "questionType": "MC_CHOICE",
-    "question": "Tính xã hội của nhà nước được hiểu là",
-    "options": [
-      "một thuộc tính không có ở nhà nước tư sản.",
-      "một thuộc tính khách quan, phổ biến của mọi nhà nước.",
-      "một thuộc tính chỉ có ở nhà nước xã hội chủ nghĩa.",
-      "một thuộc tính chỉ có ở nhà nước phong kiến."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-458a48c864",
-    "title": "Câu 11: Đặc trưng quyền lực Nhà nước",
-    "category": "Đặc trưng quyền lực Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Khác với các tổ chức xã hội, nhà nước có",
-    "options": [
-      "chủ quyền quốc gia.",
-      "quyền lực hòa nhập với dân cư.",
-      "điều lệ riêng.",
-      "nguồn tài chính phụ thuộc."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-030a9ffb1a",
-    "title": "Câu 12: Bộ máy Nhà nước CHXHCN Việt Nam",
-    "category": "Bộ máy Nhà nước CHXHCN Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Hiện nay, cơ quan nào sau đây thuộc bộ máy nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
-    "options": [
-      "Hội đồng bầu cử quốc gia.",
-      "Đảng Cộng sản Việt Nam.",
-      "Mặt trận Tổ quốc Việt Nam.",
-      "Hội Liên hiệp Phụ nữ Việt Nam."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-569dbea429",
-    "title": "Câu 13: Bộ máy Nhà nước CHXHCN Việt Nam",
-    "category": "Bộ máy Nhà nước CHXHCN Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Nhận định nào sau đây là sai về Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
-    "options": [
-      "Nhà nước có một hệ thống pháp luật dân chủ, tiến bộ, phù hợp và khả thi.",
-      "Nhà nước được tổ chức và hoạt động theo cơ chế phân chia quyền lực.",
-      "Nhà nước đảm bảo vị trí tối thượng của pháp luật trong đời sống xã hội.",
-      "Nhà nước được đặt dưới sự lãnh đạo của Đảng Cộng sản Việt Nam."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-e44c3ea22e",
-    "title": "Câu 14: Bản chất Pháp luật",
-    "category": "Bản chất Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nhận định nào sau đây là đúng?",
-    "options": [
-      "Pháp luật vừa mang tính giai cấp, vừa mang tính xã hội.",
-      "Pháp luật không mang tính giai cấp thuần túy; hoàn toàn tách rời, đối kháng với các lợi ích chung của xã hội.",
-      "Trong xã hội hiện đại, tính xã hội của pháp luật hoàn toàn triệt tiêu và thay thế tính giai cấp của pháp luật.",
-      "Tính giai cấp và tính xã hội là hai thuộc tính hoàn toàn độc lập với nhau."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-3caf2272c1",
-    "title": "Câu 15: Hình thức Pháp luật",
-    "category": "Hình thức Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Phương thức thể hiện và tồn tại của pháp luật là",
-    "options": [
-      "hình thức pháp luật.",
-      "công cụ pháp luật.",
-      "cấu trúc pháp luật.",
-      "bản chất pháp luật."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-9e345518b4",
-    "title": "Câu 16: Quy phạm Pháp luật",
-    "category": "Quy phạm Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Bộ phận nào trong cơ cấu của quy phạm pháp luật nêu lên cách xử sự mà chủ thể được làm, phải làm hoặc không được làm trong hoàn cảnh cụ thể?",
-    "options": [
-      "Giả định.",
-      "Quy định.",
-      "Chế tài.",
-      "Biện pháp áp dụng."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-924b4f3f15",
-    "title": "Câu 17: Ý thức Pháp luật",
-    "category": "Ý thức Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Ý thức pháp luật được hiểu là",
-    "options": [
-      "các quy định pháp luật do nhà nước đặt ra để định hướng hành vi của các tổ chức, cá nhân.",
-      "hành vi của các tổ chức, cá nhân về quan điểm, chính sách của nhà nước.",
-      "những học thuyết, tư tưởng của nhà nước đánh giá hành vi xử sự của tổ chức, cá nhân.",
-      "những học thuyết, tư tưởng, quan điểm của con người đối với pháp luật."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-5d4cafafdb",
-    "title": "Câu 18: Thực hiện Pháp luật",
-    "category": "Thực hiện Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Trong các hành vi sau đây, hành vi nào thuộc hình thức thi hành pháp luật?",
-    "options": [
-      "Công dân tự do lựa chọn ngành nghề kinh doanh theo đúng quy định pháp luật.",
-      "Công dân thực hiện nghĩa vụ đóng thuế theo quy định.",
-      "Người điều khiển xe ô tô không uống rượu bia khi lái xe.",
-      "Cảnh sát giao thông xử phạt người điều khiển xe gắn máy không đội mũ bảo hiểm."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-ede3cc2d06",
-    "title": "Câu 19: Áp dụng Pháp luật",
-    "category": "Áp dụng Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Trường hợp nào sau đây cần áp dụng pháp luật?",
-    "options": [
-      "Khi người dân tìm hiểu pháp luật qua sách báo.",
-      "Khi cá nhân tự nguyện thực hiện quyền của mình.",
-      "Khi giải quyết tranh chấp, xử lý vi phạm pháp luật.",
-      "Khi các tổ chức tự đưa ra các nội quy nội bộ."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-acd35e4eb3",
-    "title": "Câu 20: Hệ thống Pháp luật Việt Nam",
-    "category": "Hệ thống Pháp luật Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Việt Nam không có ngành luật nào sau đây?",
-    "options": [
-      "Ngành luật hành chính.",
-      "Ngành luật dân sự.",
-      "Ngành luật tín dụng.",
-      "Ngành luật tố tụng hình sự."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-64a609c704",
-    "title": "Câu 21: Nguồn gốc Nhà nước",
-    "category": "Nguồn gốc Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Quan điểm cho rằng, nhà nước hình thành do Thượng đế trao quyền cho người cai trị thuộc",
-    "options": [
-      "thuyết khế ước xã hội.",
-      "thuyết thần học.",
-      "thuyết bạo lực.",
-      "học thuyết Mác - Lênin."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-5447dcecba",
-    "title": "Câu 22: Bản chất giai cấp của Nhà nước",
-    "category": "Bản chất giai cấp của Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Khi ban hành chính sách thuế, nhà nước ưu tiên bảo vệ lợi ích của nhóm nắm quyền lực kinh tế, chính trị. Điều này phản ánh bản chất nào của nhà nước?",
-    "options": [
-      "Tính xã hội.",
-      "Tính giai cấp.",
-      "Tính dân chủ.",
-      "Tính pháp quyền."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-3bec9419ad",
-    "title": "Câu 23: Chủ quyền quốc gia",
-    "category": "Chủ quyền quốc gia",
-    "questionType": "MC_CHOICE",
-    "question": "Nhà nước ký hợp đồng thương mại với quốc gia khác và tự quyết định chính sách đối ngoại. Đây là biểu hiện của",
-    "options": [
-      "chủ quyền quốc gia.",
-      "quản lý văn hóa, xã hội.",
-      "quyền lực tư pháp.",
-      "quyền lực lập pháp."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-070c4f4508",
-    "title": "Câu 24: Chức năng Nhà nước",
-    "category": "Chức năng Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Mục đích chính của chức năng đối nội của nhà nước là gì?",
-    "options": [
-      "Quản lý, phát triển đời sống xã hội.",
-      "Bảo vệ chủ quyền quốc gia.",
-      "Thiết lập quan hệ ngoại giao.",
-      "Kí kết điều ước quốc tế."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-357eaea99b",
-    "title": "Câu 25: Hình thức Dân chủ",
-    "category": "Hình thức Dân chủ",
-    "questionType": "MC_CHOICE",
-    "question": "Theo Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025), nhân dân thực hiện quyền lực nhà nước bằng hình thức nào sau đây?",
-    "options": [
-      "Dân chủ đại diện, dân chủ hình thức.",
-      "Dân chủ trực tiếp, dân chủ nhân dân.",
-      "Dân biết, dân làm, dân kiểm tra, dân giám sát, dân thụ hưởng.",
-      "Dân chủ trực tiếp, dân chủ đại diện."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-23de95091d",
-    "title": "Câu 26: Cơ quan Hành chính Nhà nước",
-    "category": "Cơ quan Hành chính Nhà nước",
-    "questionType": "MC_CHOICE",
-    "question": "Cơ quan hành chính nhà nước ở Việt Nam gồm những cơ quan nào?",
-    "options": [
-      "Chính phủ, các Bộ, cơ quan ngang Bộ, Hội đồng nhân dân các cấp.",
-      "Chính phủ, Ủy ban nhân dân các cấp, Hội đồng nhân dân các cấp.",
-      "Chính phủ, các Bộ, cơ quan ngang Bộ, Ủy ban nhân dân các cấp.",
-      "Các Bộ, cơ quan ngang Bộ, Hội đồng nhân dân các cấp, Ủy ban nhân dân các cấp."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-3e1b921838",
-    "title": "Câu 27: Nhà nước Pháp quyền XHCN",
-    "category": "Nhà nước Pháp quyền XHCN",
-    "questionType": "MC_CHOICE",
-    "question": "Khi nói về Nhà nước pháp quyền xã hội chủ nghĩa ở Việt Nam, khẳng định nào sau đây sai?",
-    "options": [
-      "Nhà nước được tổ chức và hoạt động trên cơ sở chủ quyền của nhân dân.",
-      "Nhà nước thừa nhận, tôn trọng và bảo vệ quyền con người, quyền công dân.",
-      "Nhà nước có pháp luật chiếm vị trí tối thượng trong đời sống nhà nước và xã hội.",
-      "Nhà nước bảo đảm phân chia, kiềm chế, đối trọng giữa các nhánh quyền lực."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-e8b22c5251",
-    "title": "Câu 28: Nguyên tắc Pháp quyền",
-    "category": "Nguyên tắc Pháp quyền",
-    "questionType": "MC_CHOICE",
-    "question": "Nội dung nào sau đây thể hiện nguyên tắc pháp quyền trong xây dựng và hoàn thiện Nhà nước pháp quyền xã hội chủ nghĩa ở Việt Nam hiện nay?",
-    "options": [
-      "Mọi cơ quan, tổ chức, cá nhân chỉ được làm những gì mà pháp luật cho phép.",
-      "Cơ quan tư pháp có thể hoạt động độc lập với pháp luật nếu vì mục tiêu chính trị.",
-      "Quyền lực nhà nước chỉ cần phục tùng mệnh lệnh của cơ quan hành pháp.",
-      "Quyền lực nhà nước phải được thực hiện trong khuôn khổ Hiến pháp và pháp luật."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-c72c9b241f",
-    "title": "Câu 29: Bản chất Pháp luật Việt Nam",
-    "category": "Bản chất Pháp luật Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Đặc điểm nào sau đây không phản ánh bản chất pháp luật của Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam?",
-    "options": [
-      "Có tính nhân dân, tính xã hội rộng lớn.",
-      "Thể hiện ý chí nhà nước của giai cấp công nhân, nhân dân lao động.",
-      "Phụ thuộc hoàn toàn nền kinh tế thị trường.",
-      "Có quan hệ mật thiết với đường lối của Đảng Cộng sản Việt Nam."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-b69949c71e",
-    "title": "Câu 30: Thuộc tính Pháp luật",
-    "category": "Thuộc tính Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Quy định tại Điều 29 Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025): “Công dân đủ 18 tuổi trở lên có quyền biểu quyết khi nhà nước tổ chức trưng cầu ý dân” thể hiện rõ nhất đặc trưng nào của pháp luật?",
-    "options": [
-      "Tính quy phạm phổ biến.",
-      "Tính cưỡng chế nhà nước.",
-      "Tính quy phạm bắt buộc.",
-      "Tính nghĩa vụ nhà nước."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-3dce8bc1f8",
-    "title": "Câu 31: Mối quan hệ Pháp luật và Tập quán",
-    "category": "Mối quan hệ Pháp luật và Tập quán",
-    "questionType": "MC_CHOICE",
-    "question": "Một địa phương có tập quán tảo hôn nhưng chính quyền yêu cầu chấm dứt theo quy định pháp luật. Điều này cho thấy",
-    "options": [
-      "tập quán được ưu tiên áp dụng.",
-      "pháp luật loại bỏ tập quán lạc hậu.",
-      "tập quán có giá trị cao hơn pháp luật.",
-      "pháp luật phải theo tập quán."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-7dc40439c5",
-    "title": "Câu 32: Mối quan hệ Pháp luật và Kinh tế",
-    "category": "Mối quan hệ Pháp luật và Kinh tế",
-    "questionType": "MC_CHOICE",
-    "question": "Trong mối quan hệ giữa pháp luật và kinh tế thì yếu tố nào quyết định yếu tố nào?",
-    "options": [
-      "Kinh tế và pháp luật tác động lẫn nhau.",
-      "Kinh tế quyết định pháp luật.",
-      "Pháp luật quyết định kinh tế.",
-      "Kinh tế và pháp luật đều giữ vai trò quyết định."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-a2773c03a5",
-    "title": "Câu 33: Vai trò Pháp luật XHCN",
-    "category": "Vai trò Pháp luật XHCN",
-    "questionType": "MC_CHOICE",
-    "question": "Khi nói về vai trò của pháp luật Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam, nhận định nào sau đây là sai?",
-    "options": [
-      "Pháp luật là phương tiện để duy trì bảo vệ trật tự xã hội.",
-      "Pháp luật là phương tiện để thể chế hóa đường lối của Đảng Cộng sản Việt Nam.",
-      "Pháp luật là phương tiện bảo vệ quyền con người, quyền công dân.",
-      "Pháp luật là phương tiện bảo vệ thiểu số giai cấp cầm quyền."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-67524c5473",
-    "title": "Câu 34: Án lệ trong Pháp luật Việt Nam",
-    "category": "Án lệ trong Pháp luật Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Cơ quan nào ở Việt Nam được phép ban hành án lệ?",
-    "options": [
-      "Quốc hội.",
-      "Công an.",
-      "Viện kiểm sát.",
-      "Tòa án."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-7b21aa9479",
-    "title": "Câu 35: Nguồn Pháp luật Việt Nam",
-    "category": "Nguồn Pháp luật Việt Nam",
-    "questionType": "MC_CHOICE",
-    "question": "Trong các tài liệu sau, tài liệu nào là nguồn của pháp luật Việt Nam?",
-    "options": [
-      "Giáo trình Lý luận nhà nước và pháp luật của các cơ sở giáo dục đại học.",
-      "Công văn hướng dẫn nghiệp vụ của cơ quan hành chính nhà nước.",
-      "Nghị quyết của Hội đồng thẩm phán Tòa án nhân dân tối cao.",
-      "Bài viết của chuyên gia đăng trên kỷ yếu khoa học."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-fc67000841",
-    "title": "Câu 36: Cơ cấu Quy phạm Pháp luật",
-    "category": "Cơ cấu Quy phạm Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Điều 34 Hiến pháp năm 2013 (sửa đổi, bổ sung năm 2025) quy định: “Công dân có quyền được bảo đảm an sinh xã hội”. Trong quy phạm pháp luật trên bao gồm những bộ phận nào?",
-    "options": [
-      "Giả định, quy định, chế tài.",
-      "Giả định, quy định.",
-      "Quy định, chế tài.",
-      "Giả định, chế tài."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-88d328f2f3",
-    "title": "Câu 37: Điều luật & Quy phạm Pháp luật",
-    "category": "Điều luật & Quy phạm Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nhận định nào sau đây là đúng?",
-    "options": [
-      "Điều luật và quy phạm pháp luật là hai khái niệm đồng nhất.",
-      "Mọi quy phạm pháp luật đều có đầy đủ ba bộ phận.",
-      "Điều luật là hình thức thể hiện quy phạm pháp luật.",
-      "Một điều luật chỉ có một quy phạm pháp luật."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-d3a1dbcabe",
-    "title": "Câu 38: Căn cứ phát sinh Quan hệ Pháp luật",
-    "category": "Căn cứ phát sinh Quan hệ Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Điều kiện làm phát sinh quan hệ pháp luật bao gồm?",
-    "options": [
-      "Chủ thể có năng lực chủ thể, khách thể, nội dung quan hệ pháp luật.",
-      "Chủ thể có năng lực chủ thể, quy phạm pháp luật, chế tài.",
-      "Quy phạm pháp luật, chủ thể có năng lực chủ thể, trách nhiệm pháp lý.",
-      "Chủ thể có năng lực chủ thể, quy phạm pháp luật, sự kiện pháp lý."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-5c0b88cd57",
-    "title": "Câu 39: Ý thức Pháp luật & Văn hóa Pháp lý",
-    "category": "Ý thức Pháp luật & Văn hóa Pháp lý",
-    "questionType": "MC_CHOICE",
-    "question": "Anh A tự giác đội mũ bảo hiểm khi đi xe mô tô dù không có cảnh sát giao thông kiểm tra. Hành vi của anh A phản ánh rõ nét yếu tố nào?",
-    "options": [
-      "Năng lực pháp luật.",
-      "Ý thức pháp luật.",
-      "Quan hệ pháp luật.",
-      "Trách nhiệm pháp lý."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-09b7287c2f",
-    "title": "Câu 40: Giải thích Pháp luật",
-    "category": "Giải thích Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Nhận định nào là sai về giải thích pháp luật không chính thức?",
-    "options": [
-      "Được thực hiện bởi các cá nhân, tổ chức không có thẩm quyền giải thích pháp luật.",
-      "Lời giải thích được trình bày dưới dạng văn bản hoặc lời nói.",
-      "Có hiệu lực bắt buộc đối với mọi đối tượng, chủ thể trong xã hội.",
-      "Thường xuất hiện trong quá trình nghiên cứu, giảng dạy, hoặc tuyên truyền pháp luật."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-f482e3c265",
-    "title": "Câu 41: Sự kiện Pháp lý",
-    "category": "Sự kiện Pháp lý",
-    "questionType": "MC_CHOICE",
-    "question": "Anh K ký hợp đồng thuê nhà của ông H. Sự kiện nào dưới đây làm phát sinh quan hệ pháp luật giữa anh K và ông H?",
-    "options": [
-      "Anh K chuyển đồ vào nhà thuê.",
-      "Anh K và ông H ký hợp đồng thuê nhà.",
-      "Ông H xây dựng căn nhà.",
-      "Anh K đăng ký tạm trú."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-9c84cde0b7",
-    "title": "Câu 42: Tuân thủ Pháp luật",
-    "category": "Tuân thủ Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Anh M không uống rượu bia khi lái xe, anh M thực hiện pháp luật bằng hình thức",
-    "options": [
-      "áp dụng pháp luật.",
-      "sử dụng pháp luật.",
-      "tuân thủ pháp luật.",
-      "thi hành pháp luật."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-90e83e83c7",
-    "title": "Câu 43: Sử dụng Pháp luật",
-    "category": "Sử dụng Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Chị H nộp hồ sơ đề nghị cơ quan có thẩm quyền cấp hộ chiếu để phục vụ nhu cầu du lịch nước ngoài. Hành vi của chị H là",
-    "options": [
-      "sử dụng pháp luật.",
-      "tuân thủ pháp luật.",
-      "thi hành pháp luật.",
-      "áp dụng pháp luật."
-    ],
-    "correctAnswer": 0,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-8299731c1e",
-    "title": "Câu 44: Áp dụng Pháp luật",
-    "category": "Áp dụng Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Hành vi nào dưới đây là áp dụng pháp luật?",
-    "options": [
-      "Nhà trường tổ chức tuyên truyền pháp luật cho học sinh.",
-      "Tòa án tuyên phạt bị cáo 5 năm tù.",
-      "Học sinh tự giác chấp hành kỉ luật trong trường học.",
-      "Công dân nộp thuế thu nhập cá nhân đúng hạn."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-cd8a9eb018",
-    "title": "Câu 45: Cấu thành Vi phạm Pháp luật",
-    "category": "Cấu thành Vi phạm Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "N (16 tuổi) tự ý điều khiển xe mô tô của gia đình đến trường học. Trên đường đi, N điều khiển xe lạng lách và vượt đèn đỏ. Nhận định nào sau đây là đúng?",
-    "options": [
-      "N không có năng lực trách nhiệm pháp lý vì N chưa đủ 18 tuổi.",
-      "N không có lỗi vì chưa gây ra thiệt hại gì.",
-      "Hành vi của N là hành vi trái pháp luật, có lỗi.",
-      "Hành vi của N không phải là hành vi nguy hiểm cho xã hội."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-bc06d6b44b",
-    "title": "Câu 46: Trách nhiệm Pháp lý",
-    "category": "Trách nhiệm Pháp lý",
-    "questionType": "MC_CHOICE",
-    "question": "Trách nhiệm pháp lý là",
-    "options": [
-      "nghĩa vụ của các chủ thể tham gia vào quan hệ xã hội.",
-      "hậu quả bất lợi mà cá nhân, tổ chức phải gánh chịu khi vi phạm pháp luật.",
-      "chế tài của quy phạm pháp luật.",
-      "lời xin lỗi khi gây thiệt hại cho người khác."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-60207a8d0b",
-    "title": "Câu 47: Hệ thống Pháp luật",
-    "category": "Hệ thống Pháp luật",
-    "questionType": "MC_CHOICE",
-    "question": "Yếu tố nào sau đây không là bộ phận cấu thành của hệ thống pháp luật?",
-    "options": [
-      "Văn bản quy phạm pháp luật.",
-      "Văn bản áp dụng pháp luật.",
-      "Ngành luật.",
-      "Hiến pháp."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-c34f5dd233",
-    "title": "Câu 48: Nghị quyết 66-NQ/TW & Cải cách Thể chế",
-    "category": "Nghị quyết 66-NQ/TW & Cải cách Thể chế",
-    "questionType": "MC_CHOICE",
-    "question": "Theo Nghị quyết số 66-NQ/TW ngày 30/4/2025 của Bộ Chính trị về đổi mới công tác xây dựng và thi hành pháp luật đáp ứng yêu cầu phát triển đất nước trong kỷ nguyên mới, mục tiêu đến năm 2030, Việt Nam có một hệ thống pháp luật",
-    "options": [
-      "đồng bộ làm cơ sở pháp lý cho hoạt động của bộ máy nhà nước theo mô hình chính quyền 3 cấp.",
-      "dân chủ, công bằng, đồng bộ, thống nhất, công khai, minh bạch, khả thi.",
-      "cơ bản hoàn thành việc tháo gỡ những “điểm nghẽn” do quy định pháp luật.",
-      "chất lượng, hiện đại, tiệm cận chuẩn mực, thông lệ quốc tế tiên tiến và phù hợp với thực tiễn đất nước. Đọc tình huống sau đây và trả lời các câu từ 49 đến 51. Anh M ký hợp đồng mua bán một chiếc máy tính của chị N với giá tiền là 30 triệu đồng và anh M phải thanh toán đủ tiền vào ngày 01/3/2026, chị N phải bàn giao chiếc máy tính vào ngày 05/3/2026. Sau đó, anh M đã thực hiện thanh toán đủ số tiền, đúng thời hạn nhưng chị N không bàn giao chiếc máy tính như cam kết."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-ba8fe174d7",
-    "title": "Câu 49: Tình huống Hợp đồng Dân sự",
-    "category": "Tình huống Hợp đồng Dân sự",
-    "questionType": "MC_SCENARIO",
-    "question": "Đọc tình huống: Anh M ký hợp đồng mua bán một chiếc máy tính của chị N với giá 30 triệu đồng, thanh toán đủ ngày 01/3/2026, giao máy ngày 05/3/2026. Anh M đã thanh toán đủ đúng hẹn nhưng chị N không bàn giao máy.\n\nCâu hỏi: Trong tình huống trên, quan hệ pháp luật về hợp đồng mua bán giữa anh M và chị N phát sinh kể từ thời điểm nào?",
-    "options": [
-      "Việc anh M thanh toán đầy đủ tiền mua chiếc máy tính của chị N.",
-      "Anh M soạn thảo hợp đồng mua chiếc máy tính với chị N.",
-      "Việc ký kết hợp đồng mua bán chiếc máy tính giữa anh M và chị N.",
-      "Chị N không bàn giao chiếc máy tính cho anh M."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-33813214b4",
-    "title": "Câu 50: Tình huống Quan hệ Pháp luật",
-    "category": "Tình huống Quan hệ Pháp luật",
-    "questionType": "MC_SCENARIO",
-    "question": "Tình huống anh M và chị N: Khi chị N không bàn giao chiếc máy tính đúng thời hạn theo thỏa thuận, quyền yêu cầu bàn giao chiếc máy tính thuộc về yếu tố nào trong quan hệ pháp luật?",
-    "options": [
-      "Chủ thể của quan hệ pháp luật.",
-      "Nội dung của quan hệ pháp luật.",
-      "Khách thể của quan hệ pháp luật.",
-      "Năng lực pháp luật của chủ thể."
-    ],
-    "correctAnswer": 1,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-de27681083",
-    "title": "Câu 51: Tình huống Khách thể Pháp lý",
-    "category": "Tình huống Khách thể Pháp lý",
-    "questionType": "MC_SCENARIO",
-    "question": "Tình huống anh M và chị N: Khách thể trong quan hệ pháp luật về hợp đồng mua bán chiếc máy tính trên được xác định là gì?",
-    "options": [
-      "anh M và chị N.",
-      "quyền và nghĩa vụ của anh M và chị N trong hợp đồng.",
-      "chiếc máy tính, hành vi pháp lý đúng đắn của anh M và chị N.",
-      "hợp đồng mua bán chiếc máy tính. Đọc tình huống sau đây và trả lời các câu từ 52 đến 54. P và Q là nhân viên công ty X. Hai người đã thống nhất kế hoạch chiếm đoạt một số tài sản (ước tính giá trị tài sản khoảng 10 triệu đồng) thuộc sở hữu của công ty. Trong quá trình thực hiện, P khi đang đưa tài sản xuống tầng hầm của công ty để đến điểm hẹn giao cho Q thì bị bảo vệ công ty phát hiện."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-2dddc0ddf4",
-    "title": "Câu 52: Tình huống Vi phạm Pháp luật (Mặt chủ quan)",
-    "category": "Tình huống Vi phạm Pháp luật (Mặt chủ quan)",
-    "questionType": "MC_SCENARIO",
-    "question": "Đọc tình huống: P và Q là nhân viên công ty X thống nhất kế hoạch chiếm đoạt tài sản (khoảng 10 triệu đồng) của công ty. Trong lúc P đang đưa tài sản xuống tầng hầm để giao cho Q thì bị bảo vệ phát hiện.\n\nCâu hỏi: Dấu hiệu nào thuộc mặt chủ quan của vi phạm pháp luật trên?",
-    "options": [
-      "Tài sản thuộc sở hữu công ty X.",
-      "Hành vi của P giao tài sản cho Q.",
-      "P và Q nhận thức rõ tính trái pháp luật của hành vi và mong muốn thực hiện.",
-      "Hành vi bàn bạc, thống nhất kế hoạch chiếm đoạt tài sản của P và Q."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-cf16310940",
-    "title": "Câu 53: Tình huống Căn cứ Trách nhiệm Pháp lý",
-    "category": "Tình huống Căn cứ Trách nhiệm Pháp lý",
-    "questionType": "MC_SCENARIO",
-    "question": "Tình huống P và Q: Căn cứ nào trực tiếp làm phát sinh trách nhiệm pháp lý của P và Q?",
-    "options": [
-      "Ý định chiếm đoạt tài sản xuất hiện trong suy nghĩ của P và Q.",
-      "Tài sản thuộc sở hữu của công ty X.",
-      "Sự phát hiện của người người bảo vệ đối với hành vi chiếm đoạt tài sản của P và Q.",
-      "Hành vi chiếm đoạt tài sản của P và Q được thực hiện với lỗi cố ý."
-    ],
-    "correctAnswer": 3,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-c3e17b78e6",
-    "title": "Câu 54: Tình huống Đồng phạm & Trách nhiệm Pháp lý",
-    "category": "Tình huống Đồng phạm & Trách nhiệm Pháp lý",
-    "questionType": "MC_SCENARIO",
-    "question": "Tình huống P và Q: Nhận định nào sau đây là đúng với tình huống trên?",
-    "options": [
-      "P chịu trách nhiệm pháp lý vì P là người trực tiếp thực hiện hành vi, Q chưa nhận được tài sản từ P nên không liên đới trách nhiệm.",
-      "Không phát sinh trách nhiệm pháp lý vì tài sản chưa bị dịch chuyển khỏi địa điểm công ty X.",
-      "Việc xem xét trách nhiệm pháp lý phải căn cứ hành vi trái pháp luật; có lỗi của P và Q không chỉ căn cứ vào hậu quả.",
-      "Hành vi của P và Q chưa chiếm đoạt được tài sản nên chỉ vi phạm quy tắc đạo đức nghề nghiệp."
-    ],
-    "correctAnswer": 2,
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-6c1800a912",
-    "title": "Câu 55: Điền khuyết: Hình thức Cấu trúc Nhà nước",
-    "category": "Điền khuyết: Hình thức Cấu trúc Nhà nước",
-    "questionType": "MC_FILL",
-    "question": "Quốc gia A có một bản Hiến pháp, một hệ thống pháp luật thống nhất, một hệ thống cơ quan nhà nước thống nhất từ trung ương đến địa phương và các đơn vị hành chính không có chủ quyền riêng. Quốc gia A có hình thức cấu trúc nhà nước nào? Trả lời:___________________",
-    "options": [
-      "Nhà nước đơn nhất",
-      "Nhà nước liên bang",
-      "Nhà nước liên minh",
-      "Nhà nước tự trị"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "Nhà nước đơn nhất",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-5dcf7aec34",
-    "title": "Câu 56: Điền khuyết: Nguyên tắc Bộ máy Nhà nước",
-    "category": "Điền khuyết: Nguyên tắc Bộ máy Nhà nước",
-    "questionType": "MC_FILL",
-    "question": "Tổ chức và hoạt động của Nhà nước Cộng hòa xã hội chủ nghĩa Việt Nam bảo đảm sự chỉ đạo, lãnh đạo tập trung thống nhất của trung ương với địa phương, của cấp trên với cấp dưới; đồng thời, phải phát huy tính tích cực, chủ động, sáng tạo của địa phương và cấp dưới nhưng luôn phải đảm bảo sự tập trung thống nhất của cấp trên thể hiện nguyên tắc _________. Trả lời:__________",
-    "options": [
-      "Tập trung dân chủ",
-      "Quyền lực thống nhất",
-      "Pháp chế xã hội chủ nghĩa",
-      "Nhân dân làm chủ"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "Tập trung dân chủ",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-bb217d0b48",
-    "title": "Câu 57: Điền khuyết: Pháp luật & Đạo đức",
-    "category": "Điền khuyết: Pháp luật & Đạo đức",
-    "questionType": "MC_FILL",
-    "question": "Có bao nhiêu nhận định đúng trong các nhận định sau đây? (1) Trong mối quan hệ pháp luật với đạo đức thì pháp luật và đạo đức hoàn toàn độc lập. (2) Trong mối quan hệ pháp luật với đạo đức thì đạo đức có vai trò hỗ trợ cho việc xây dựng pháp luật. (3) Trong mối quan hệ pháp luật với đạo đức thì pháp luật có vai trò ghi nhận các quy phạm đạo đức tốt đẹp. (4) Trong mối quan hệ pháp luật với đạo đức thì pháp luật có vai trò loại bỏ các quy phạm đạo đức lỗi thời. (5) Trong mối quan hệ pháp luật với đạo đức thì pháp luật góp phần hình thành các quan niệm đạo đức mới. (6) Trong mối quan hệ pháp luật với đạo đức thì pháp luật không ngăn cấm, không loại trừ mọi quy phạm đạo đức. Trả lời:__________",
-    "options": [
-      "4",
-      "3",
-      "5",
-      "2"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "4",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-db5f6507e8",
-    "title": "Câu 58: Điền khuyết: Năng lực Pháp luật",
-    "category": "Điền khuyết: Năng lực Pháp luật",
-    "questionType": "MC_FILL",
-    "question": "Năng lực nào của một cá nhân phản ánh khả năng được nhà nước thừa nhận có các quyền và nghĩa pháp lý theo quy định pháp luật, xuất hiện kể từ khi cá nhân được sinh ra? Trả lời:__________",
-    "options": [
-      "Năng lực pháp luật",
-      "Năng lực hành vi",
-      "Năng lực trách nhiệm",
-      "Năng lực chủ thể"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "Năng lực pháp luật",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-40ff6be0b1",
-    "title": "Câu 59: Điền khuyết: Lỗi trong Vi phạm Pháp luật",
-    "category": "Điền khuyết: Lỗi trong Vi phạm Pháp luật",
-    "questionType": "MC_FILL",
-    "question": "Bác sĩ X được giao nhiệm vụ thực hiện ca phẫu thuật cho bệnh nhân Y. Trong quá trình thực hiện nhiệm vụ, do không cẩn thận bác sĩ X đã để quên gạc y tế trong ổ bụng của bệnh nhân khiến bệnh nhân bị nhiễm trùng nặng sau 1 tuần xuất viện. Lỗi của bác sĩ X trong trường hợp này là gì? Trả lời:__________",
-    "options": [
-      "Vô ý do cẩu thả",
-      "Vô ý vì quá tự tin",
-      "Cố ý gián tiếp",
-      "Cố ý trực tiếp"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "Vô ý do cẩu thả",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "mc-5589fc0dd3",
-    "title": "Câu 60: Điền khuyết: Trách nhiệm Kỷ luật Viên chức",
-    "category": "Điền khuyết: Trách nhiệm Kỷ luật Viên chức",
-    "questionType": "MC_FILL",
-    "question": "Anh H là viên chức cơ quan nhà nước, do tự ý nghỉ việc không xin phép liên tục nhiều ngày làm việc nên đã bị xử lý bằng hình thức buộc thôi việc. Trách nhiệm pháp lý nào được áp dụng đối với anh H? Trả lời:__________",
-    "options": [
-      "Trách nhiệm kỷ luật",
-      "Trách nhiệm hành chính",
-      "Trách nhiệm dân sự",
-      "Trách nhiệm hình sự"
-    ],
-    "correctAnswer": 0,
-    "textAnswer": "Trách nhiệm kỷ luật",
-    "explanation": "Căn cứ giáo trình Lý luận Nhà nước & Pháp luật (T05 CAND) và văn bản pháp luật hiện hành.",
-    "legalReference": "Giáo trình CAND Chuẩn 2026 - Bộ đề thi CA4 Văn bằng 2"
-  },
-  {
-    "id": "essay-bfaf8e4159",
-    "title": "PHẦN I: TỰ LUẬN (30 điểm)",
-    "category": "Nghị luận Lý luận CAND & Tư tưởng Hồ Chí Minh",
-    "questionType": "ESSAY",
-    "question": "Chủ tịch Hồ Chí Minh khẳng định: “Tương lai thuộc về thanh niên. Tương lai là cách mạng luôn tiến lên. Là chủ của tương lai, thanh niên không thể không có lý tưởng cao cả. Vì vậy thanh niên phải có cuộc sống chính trị tích cực và cách mạng.”. (Hồ Chí Minh toàn tập, Tập 12. NXB Chính trị quốc gia - Sự thật, 2011, trang 519)\n\nAnh/chị hãy viết một bài nghị luận (tối thiểu 500 chữ) trình bày cách hiểu của mình về nội dung đoạn trích trên và liên hệ với vai trò của thanh niên trong giai đoạn hiện nay.",
-    "options": [],
-    "correctAnswer": 0,
-    "sampleEssay": "DÀN Ý & BÀI LÀM GỢI Ý CHUẨN T05:\n\nI. MỞ BÀI:\n- Dẫn dắt tư tưởng Hồ Chí Minh về vị trí chiến lược của thanh niên trong sự nghiệp cách mạng: \"Thanh niên là người chủ tương lai của nước nhà\".\n- Trích dẫn câu nói của Bác: “Tương lai thuộc về thanh niên. Tương lai là cách mạng luôn tiến lên...”.\n- Khẳng định tính thời sự và định hướng kim chỉ nam đối với tuổi trẻ, đặc biệt là thế hệ thanh niên Công an nhân dân trong kỷ nguyên mới.\n\nII. THÂN BÀI:\n1. Giải thích và phân tích nội dung câu nói của Bác (10 điểm):\n- \"Tương lai thuộc về thanh niên\": Khẳng định vai trò tiếp nối lịch sử, là lực lượng xung kích gánh vác sứ mệnh dân tộc.\n- \"Tương lai là cách mạng luôn tiến lên\": Cách mạng là dòng chảy liên tục, đòi hỏi sự đổi mới, sáng tạo không ngừng.\n- \"Thanh niên không thể không có lý tưởng cao cả\": Lý tưởng độc lập dân tộc gắn liền với CNXH; phụng sự Tổ quốc, phục vụ nhân dân.\n- \"Cuộc sống chính trị tích cực và cách mạng\": Không thờ ơ chính trị, chủ động rèn luyện bản lĩnh, sẵn sàng cống hiến.\n\n2. Bàn luận và liên hệ thực tiễn với thanh niên hiện nay (14 điểm):\n- Thời cơ và thách thức của kỷ nguyên số, hội nhập quốc tế và các âm mưu diễn biến hòa bình.\n- Vai trò của thanh niên trong phát triển kinh tế - xã hội, bảo vệ an ninh trật tự, tiên phong làm chủ khoa học công nghệ.\n- Phê phán lối sống thực dụng, phai nhạt lý tưởng, \"tự diễn biến\", \"tự chuyển hóa\" ở một bộ phận giới trẻ.\n- Trách nhiệm đặc thù của đoàn viên, thanh niên CAND: Khắc ghi Sáu điều Bác Hồ dạy CAND, bảo vệ Đảng, bảo vệ Nhà nước và giữ vững bình yên cuộc sống.\n\nIII. KẾT BÀI:\n- Khẳng định giá trị trường tồn trong lời căn dặn của Bác.\n- Lời hứa hành động: Không ngừng học tập, tu dưỡng đạo đức cách mạng, phấn đấu xứng danh người chiến sĩ CAND \"Vì nước quên thân, vì dân phục vụ\".",
-    "explanation": "Đáp ứng chuẩn thang điểm chấm thi CAND: Phân tích tư tưởng (10đ) + Liên hệ thực tiễn bản thân và CAND (14đ) + Kỹ năng lập luận, chính tả (6đ).",
-    "legalReference": "Hồ Chí Minh toàn tập (Tập 12, tr. 519) - Đề cương thi tuyển sinh Văn bằng 2 CAND."
-  }
-]
+// Toàn bộ dữ liệu câu hỏi được lấy trực tiếp 100% từ Ngân hàng câu hỏi trong Cơ sở dữ liệu
 
-// Hàm phân loại câu hỏi từ dữ liệu Ngân hàng
+// Hàm phân loại câu hỏi từ dữ liệu Ngân hàng CSDL
 function detectQuestionType(q: QuestionBankResponse): 'MC_CHOICE' | 'MC_SCENARIO' | 'MC_FILL' | 'ESSAY' {
-  const text = (q.questionText || '') + ' ' + (q.title || '')
-  const lower = text.toLowerCase()
-
-  // 1. Kiểm tra trắc nghiệm điền đáp án trước:
-  // Nhận diện dấu gạch dưới dài (_____, _ _ _), dấu chấm dài (.....), "điền vào chỗ trống", hoặc có từ "điền"
-  if (
-    text.includes('_____') ||
-    text.includes('____') ||
-    text.includes('___') ||
-    text.includes('_ _ _') ||
-    text.includes('.....') ||
-    text.includes('....') ||
-    text.includes('...') ||
-    lower.includes('điền vào chỗ trống') ||
-    lower.includes('chọn từ thích hợp') ||
-    lower.includes('điền từ') ||
-    lower.includes('điền đáp án')
-  ) {
-    return 'MC_FILL'
-  }
-
-  // 2. Nếu là câu tự luận thực sự (questionType là ESSAY hoặc không có lựa chọn nào và không phải điền khuyết)
-  if (q.questionType?.toUpperCase() === 'ESSAY' || (!q.options || q.options.length === 0)) {
-    return 'ESSAY'
-  }
-
-  // 3. Kiểm tra tình huống: có từ "tình huống", "giả sử", "trong trường hợp", "tổ công tác", v.v.
-  if (
-    lower.includes('tình huống') ||
-    lower.includes('giả sử') ||
-    lower.includes('tổ công tác phát hiện') ||
-    lower.includes('vụ án') ||
-    lower.includes('trường hợp sau đây')
-  ) {
-    return 'MC_SCENARIO'
-  }
-
-  // Mặc định là trắc nghiệm chọn A B C D
-  return 'MC_CHOICE'
+  return classifyQuestion(q)
 }
 
 // Hàm xáo trộn Fisher-Yates
@@ -1087,11 +77,316 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr
 }
 
+// Chuẩn hóa và phục hồi toàn diện các lỗi chữ/dấu tiếng Việt (gãy thanh điệu, tách dấu do OCR/font cũ)
+export function cleanVietnameseTypography(text: string): string {
+  if (!text) return ''
+  let s = text.normalize('NFC')
+
+  // 1. Ghép lại các âm tiết bị tách dấu / chèn khoảng trắng trước phụ âm cuối
+  s = s.replace(/ki[eê][\u00B4\u02CA\u0301\s]*n\b/gi, 'kiến')
+       .replace(/vi[eê][\u00B4\u02CA\u0301\s]*t\b/gi, 'viết')
+       .replace(/b[aă][\u0060\u02CB\u0300\s]*ng\b/gi, 'bằng')
+       .replace(/r[aă][\u0060\u02CB\u0300\s]*ng\b/gi, 'rằng')
+       .replace(/c[oô][\u00B4\u02CA\u0301\s]*ng\b/gi, 'cống')
+       .replace(/hi[eê][\u00B4\u02CA\u0301\s]*n\b/gi, 'hiến')
+       .replace(/bi[eê][\u00B4\u02CA\u0301\s]*t\b/gi, 'biết')
+       .replace(/bi[eê][\u00B4\u02CA\u0301\s]*n\b/gi, 'biến')
+       .replace(/ph[aâ][\u0060\u02CB\u0300\s]*n\b/gi, 'phần')
+       .replace(/ph[oô][\u0060\u02CB\u0300\s]*n\b/gi, 'phồn')
+       .replace(/t[oô][\u00B4\u02CA\u0301\s]*i\b/gi, 'tối')
+       .replace(/ti[eê][\u00B4\u02CA\u0301\s]*p\b/gi, 'tiếp')
+       .replace(/n[oô][\u00B4\u02CA\u0301\s]*i\b/gi, 'nối')
+       .replace(/u[oô][\u00B4\u02CA\u0301\s]*ng\b/g, 'uống')
+       .replace(/U[oô][\u00B4\u02CA\u0301\s]*ng\b/g, 'Uống')
+       .replace(/uố\s+ng\b/g, 'uống')
+       .replace(/Uố\s+ng\b/g, 'Uống')
+       .replace(/ngu[oô][\u0060\u02CB\u0300\s]*n\b/gi, 'nguồn')
+       .replace(/truy[eê][\u0060\u02CB\u0300\s]*n\b/gi, 'truyền')
+       .replace(/th[oô][\u00B4\u02CA\u0301\s]*ng\b/gi, 'thống')
+       .replace(/thố\s+ng\b/gi, 'thống')
+       .replace(/qu[oô][\u00B4\u02CA\u0301\s]*c\b/g, 'quốc')
+       .replace(/Qu[oô][\u00B4\u02CA\u0301\s]*c\b/g, 'Quốc')
+       .replace(/quố\s+c\b/g, 'quốc')
+       .replace(/Quố\s+c\b/g, 'Quốc')
+       .replace(/v[oơ][\u00B4\u02CA\u0301\s]*i\b/gi, 'với')
+       .replace(/th[eê][\u00B4\u02CA\u0301]\s+/gi, 'thế ')
+       .replace(/v[eê][\u0060\u02CB\u0300]\s+/gi, 'về ')
+       .replace(/k[eê][\u00B4\u02CA\u0301]\s+/gi, 'kế ')
+
+  // 2. Chuyển đổi các ký tự dấu rời rạc sang ký tự có dấu chuẩn
+  const diacriticMap: Record<string, string> = {
+    'ê´': 'ế', 'ê`': 'ề', 'ể': 'ể', 'ê~': 'ễ', 'ệ': 'ệ',
+    'ô´': 'ố', 'ô`': 'ồ', 'ổ': 'ổ', 'ô~': 'ỗ', 'ộ': 'ộ',
+    'ơ´': 'ớ', 'ơ`': 'ờ', 'ở': 'ở', 'ơ~': 'ỡ', 'ợ': 'ợ',
+    'ư´': 'ứ', 'ư`': 'ừ', 'ử': 'ử', 'ư~': 'ữ', 'ự': 'ự',
+    'ă´': 'ắ', 'ă`': 'ằ', 'ẳ': 'ẳ', 'ă~': 'ẵ', 'ặ': 'ặ',
+    'â´': 'ấ', 'â`': 'ầ', 'ẩ': 'ẩ', 'â~': 'ẫ', 'ậ': 'ậ',
+    'a´': 'á', 'a`': 'à', 'ả': 'ả', 'a~': 'ã', 'ạ': 'ạ',
+    'e´': 'é', 'e`': 'è', 'ẻ': 'ẻ', 'e~': 'ẽ', 'ẹ': 'ẹ',
+    'i´': 'í', 'i`': 'ì', 'ỉ': 'ỉ', 'i~': 'ĩ', 'ị': 'ị',
+    'o´': 'ó', 'o`': 'ò', 'ỏ': 'ỏ', 'o~': 'õ', 'ọ': 'ọ',
+    'u´': 'ú', 'u`': 'ù', 'ủ': 'ủ', 'u~': 'ũ', 'ụ': 'ụ',
+    'y´': 'ý', 'y`': 'ỳ', 'ỷ': 'ỷ', 'y~': 'ỹ', 'ỵ': 'ỵ',
+  }
+
+  for (const [k, v] of Object.entries(diacriticMap)) {
+    s = s.replaceAll(k, v)
+    s = s.replaceAll(k.toUpperCase(), v.toUpperCase())
+  }
+
+  // 3. Dọn sạch dấu rác và chuẩn hóa khoảng trắng
+  s = s.replace(/[\u00B4\u02CA]/g, '')
+  s = s.replace(/`([a-zA-Z])/g, '$1')
+  s = s.replace(/[ ]{2,}/g, ' ')
+
+  return s.normalize('NFC')
+}
+
+// Thành phần hiển thị đề bài tự luận chuẩn hóa, cân đối và thẩm mỹ
+function FormattedExamQuestionPrompt({
+  question,
+  fontSize
+}: {
+  question?: string
+  fontSize: 'normal' | 'large' | 'xlarge'
+}) {
+  const cleaned = cleanVietnameseTypography(question || '')
+  if (!cleaned) return null
+
+  // 1. Bảo vệ các vị trí ngắt đoạn có chủ đích:
+  // - Sau dấu hai chấm (:) kết thúc lời dẫn
+  // - Sau dấu ngoặc kép (") hoặc (”) kết thúc trích dẫn
+  // - Dấu xuống dòng kép (\n\n)
+  let s = cleaned
+    .replace(/:\s*\n/g, ':__BREAK__')
+    .replace(/\"\s*\n/g, '"__BREAK__')
+    .replace(/”\s*\n/g, '”__BREAK__')
+    .replace(/\n\s*\n/g, '__BREAK__')
+
+  // 2. Chuyển các dấu xuống dòng đơn lẻ ở giữa câu do gõ hoặc OCR thành khoảng trắng
+  s = s.replace(/\s*\n\s*/g, ' ')
+
+  // 3. Tách thành các đoạn văn riêng biệt
+  const rawParagraphs = s.split('__BREAK__').map(p => p.trim()).filter(Boolean)
+
+  const textClass = cn(
+    "leading-relaxed font-sans",
+    fontSize === 'normal'
+      ? "text-sm sm:text-base"
+      : fontSize === 'large'
+      ? "text-base sm:text-lg"
+      : "text-lg sm:text-xl"
+  )
+
+  return (
+    <div className="space-y-3 font-sans">
+      {rawParagraphs.map((para, idx) => {
+        // A. Dẫn nhập: Có ý kiến cho rằng / Đề bài / Đề thi:
+        if (para.endsWith(':')) {
+          return (
+            <div key={idx} className={cn("font-bold text-slate-900 tracking-tight", textClass)}>
+              {para}
+            </div>
+          )
+        }
+
+        // B. Trích đoạn ý kiến / nhận định (nằm trong dấu ngoặc kép)
+        const isQuote =
+          (para.startsWith('"') && para.endsWith('"')) ||
+          (para.startsWith('“') && para.endsWith('”')) ||
+          (para.startsWith('"') && para.includes('"')) ||
+          (para.startsWith('“') && para.includes('”'))
+
+        if (isQuote) {
+          return (
+            <blockquote
+              key={idx}
+              className={cn(
+                "relative my-2.5 px-4 sm:px-5 py-3 rounded-xl bg-slate-50/90 border-l-4 border-emerald-600 border-y border-r border-slate-200/80 shadow-2xs text-justify italic font-medium text-slate-900 leading-relaxed",
+                textClass
+              )}
+            >
+              <div className="relative z-10">{para}</div>
+            </blockquote>
+          )
+        }
+
+        // C. Đoạn yêu cầu phân tích / nghị luận của đề bài (căn đều 2 bên cân đối tuyệt đối)
+        return (
+          <p
+            key={idx}
+            className={cn(
+              "indent-8 text-justify font-semibold leading-relaxed text-slate-950",
+              textClass
+            )}
+          >
+            {para}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
+// Thành phần hiển thị nội dung bài làm A4 với định dạng tự nhiên như 1 tờ giấy học / bài thi thật
+function FormattedEssayContent({
+  content,
+  fontSize
+}: {
+  content?: string
+  fontSize: 'normal' | 'large' | 'xlarge'
+}) {
+  const cleanedContent = cleanVietnameseTypography(content || '')
+
+  if (!cleanedContent) {
+    return (
+      <div className="py-8 text-center italic text-slate-500 text-sm font-sans">
+        Đang cập nhật hướng dẫn bài làm mẫu chi tiết cho đề thi này.
+      </div>
+    )
+  }
+
+  // Tách nội dung theo dòng
+  const lines = cleanedContent.split('\n')
+  const elements: {
+    type: 'main_header' | 'sub_header' | 'divider' | 'bullet' | 'paragraph'
+    text: string
+    lead?: string
+    rest?: string
+  }[] = []
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (!line) continue
+
+    // Đường phân cách
+    if (/^[=-]{5,}$/.test(line)) {
+      elements.push({ type: 'divider', text: '' })
+      continue
+    }
+
+    // Đề mục lớn: I. MỞ BÀI, II. THÂN BÀI, III. KẾT BÀI, DÀN Ý, PHẦN THAM KHẢO...
+    if (
+      /^(I|II|III|IV|V)\.\s+/i.test(line) ||
+      /^PHẦN\s+[I|V|X\d]+:/i.test(line) ||
+      /^DÀN Ý\s+/i.test(line) ||
+      /^PHẦN THAM KHẢO\s+/i.test(line)
+    ) {
+      elements.push({ type: 'main_header', text: line })
+      continue
+    }
+
+    // Đề mục nhỏ: 1. Giải thích, 2. Phân tích, a. Cơ sở lý luận...
+    if (/^([1-9]\.|\b[a-d]\.)\s+/i.test(line)) {
+      elements.push({ type: 'sub_header', text: line })
+      continue
+    }
+
+    // Dòng gạch đầu dòng: - hoặc + hoặc * hoặc •
+    if (/^[-+*•]\s+/.test(line)) {
+      const cleanLine = line.replace(/^[-+*•]\s+/, '')
+      if (cleanLine.includes(':')) {
+        const colonIdx = cleanLine.indexOf(':')
+        elements.push({
+          type: 'bullet',
+          text: cleanLine,
+          lead: cleanLine.slice(0, colonIdx + 1),
+          rest: cleanLine.slice(colonIdx + 1).trim()
+        })
+      } else {
+        elements.push({
+          type: 'bullet',
+          text: cleanLine
+        })
+      }
+      continue
+    }
+
+    // Đoạn văn thông thường
+    elements.push({ type: 'paragraph', text: line })
+  }
+
+  return (
+    <div
+      className={cn(
+        "font-sans text-slate-900 space-y-3",
+        fontSize === 'normal'
+          ? "text-sm sm:text-base leading-relaxed"
+          : fontSize === 'large'
+          ? "text-base sm:text-lg leading-relaxed"
+          : "text-lg sm:text-xl leading-loose"
+      )}
+    >
+      {elements.map((el, idx) => {
+        if (el.type === 'divider') {
+          return (
+            <div key={idx} className="my-6 border-t border-dashed border-slate-300 text-center relative select-none">
+              <span className="bg-white px-3 text-xs text-slate-400 italic -top-3 relative">
+                ❖ ❖ ❖
+              </span>
+            </div>
+          )
+        }
+
+        if (el.type === 'main_header') {
+          return (
+            <div key={idx} className="pt-4 pb-1.5 border-b border-slate-300 first:pt-1">
+              <h3 className="font-extrabold uppercase text-slate-950 tracking-wide text-xs sm:text-sm">
+                {el.text}
+              </h3>
+            </div>
+          )
+        }
+
+        if (el.type === 'sub_header') {
+          return (
+            <h4 key={idx} className="font-bold text-slate-900 pt-2 text-xs sm:text-sm">
+              {el.text}
+            </h4>
+          )
+        }
+
+        if (el.type === 'bullet') {
+          return (
+            <div key={idx} className="pl-5 relative text-slate-800 text-justify">
+              <span className="absolute left-0 text-slate-400 font-bold select-none">—</span>
+              {el.lead ? (
+                <span>
+                  <strong className="font-bold text-slate-950">{el.lead}</strong>{' '}
+                  <span>{el.rest}</span>
+                </span>
+              ) : (
+                <span>{el.text}</span>
+              )}
+            </div>
+          )
+        }
+
+        return (
+          <p key={idx} className="indent-8 text-justify text-slate-800 leading-relaxed">
+            {el.text}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 export function QuizPage() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Chế độ học: 'FLASHCARD' (Flashcard lật thẻ ghi nhớ) | 'QUIZ' (Trắc nghiệm tính điểm) | 'ESSAY_STUDY' (Luyện Tự luận & Án lệ)
   const [learningMode, setLearningMode] = useState<'FLASHCARD' | 'QUIZ' | 'ESSAY_STUDY'>('FLASHCARD')
+
+  // Quản lý xem tài liệu dạng tờ giấy thi A4
+  const [selectedA4Essay, setSelectedA4Essay] = useState<QuizQuestionItem | null>(null)
+  // Quản lý hiển thị vở nháp bên trong tờ A4
+  const [isA4DraftOpen, setIsA4DraftOpen] = useState<boolean>(false)
+  // Quản lý trạng thái đã sao chép tài liệu A4
+  const [isCopiedA4, setIsCopiedA4] = useState<boolean>(false)
+  // Quản lý trạng thái đang xuất file PDF
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false)
 
   // Phân loại câu hỏi: ALL | MC_CHOICE | MC_SCENARIO | MC_FILL | ESSAY
   const [typeFilter, setTypeFilter] = useState<QuizQuestionTypeFilter>('ALL')
@@ -1129,6 +424,48 @@ export function QuizPage() {
   const handleFontSizeChange = (size: 'normal' | 'large' | 'xlarge') => {
     setQuizFontSize(size)
     localStorage.setItem('quiz_font_size', size)
+  }
+
+  // Tự động nhận diện Chế độ học và Phân loại từ URL Parameters khi bấm từ Menu Dropdown Sidebar
+  useEffect(() => {
+    if (!location.search) return
+    const params = new URLSearchParams(location.search)
+    const mode = params.get('mode')
+    if (mode === 'FLASHCARD' || mode === 'QUIZ' || mode === 'ESSAY_STUDY') {
+      setLearningMode(mode)
+    }
+    const type = params.get('type')
+    if (type && ['ALL', 'MC_CHOICE', 'MC_SCENARIO', 'MC_FILL', 'ESSAY'].includes(type)) {
+      setTypeFilter(type as QuizQuestionTypeFilter)
+    }
+  }, [location.search])
+
+  // Quản lý nội dung bản nháp tự luận lưu vào LocalStorage
+  const [essayDrafts, setEssayDrafts] = useState<Record<string | number, string>>(() => {
+    try {
+      const saved = localStorage.getItem('essay_drafts_t05')
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  const handleDraftChange = (id: string | number, text: string) => {
+    setEssayDrafts(prev => {
+      const next = { ...prev, [id]: text }
+      try {
+        localStorage.setItem('essay_drafts_t05', JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
+
+  // Hàm đếm số từ thông minh cho bài viết tự luận
+  const countWords = (text?: string): number => {
+    if (!text) return 0
+    const trimmed = text.trim()
+    if (!trimmed) return 0
+    return trimmed.split(/\s+/).length
   }
 
   // Hàm chuyển đổi raw QuestionBankResponse sang QuizQuestionItem
@@ -1203,31 +540,36 @@ export function QuizPage() {
     setIsFinished(false)
   }
 
-  // Tải dữ liệu từ Ngân hàng câu hỏi
+  // Tải dữ liệu thật 100% từ Ngân hàng câu hỏi trong Cơ sở dữ liệu
   const loadQuestionBankData = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Lấy toàn bộ câu hỏi (bao gồm cả MC & ESSAY) từ ngân hàng - tải tối đa 500 câu
-      const res = await questionBankApi.getQuestions({
-        page: 1,
-        limit: 500,
-        isDraft: false,
-      })
-
-      let allQuestions = res?.content || []
-
-      if (allQuestions.length === 0) {
-        const draftRes = await questionBankApi.getQuestions({
+      // Lấy toàn bộ câu hỏi (cả câu hỏi đã xuất bản và bản nháp) từ CSDL
+      const [pubRes, draftRes] = await Promise.allSettled([
+        questionBankApi.getQuestions({
           page: 1,
-          limit: 500,
+          limit: 1000,
+          isDraft: false,
+        }),
+        questionBankApi.getQuestions({
+          page: 1,
+          limit: 1000,
           isDraft: true,
-        })
-        allQuestions = draftRes?.content || []
-      }
+        }),
+      ])
 
+      const pubList = pubRes.status === 'fulfilled' ? pubRes.value?.content || [] : []
+      const draftList = draftRes.status === 'fulfilled' ? draftRes.value?.content || [] : []
+
+      // Gộp câu hỏi và loại trừ trùng ID (ưu tiên bản ghi đã xuất bản)
+      const questionMap = new Map<string, QuestionBankResponse>()
+      pubList.forEach(q => { if (q?.id) questionMap.set(q.id, q) })
+      draftList.forEach(q => { if (q?.id && !questionMap.has(q.id)) questionMap.set(q.id, q) })
+
+      const allQuestions = Array.from(questionMap.values())
       setRawBankQuestions(allQuestions)
 
-      // Lọc các chuyên đề
+      // Lọc các chuyên đề thật có trong CSDL
       const cats = Array.from(
         new Set(
           allQuestions
@@ -1243,12 +585,13 @@ export function QuizPage() {
         generateSession(converted, categoryFilter, typeFilter, questionCount)
       } else {
         setIsFromBank(false)
-        generateSession(FALLBACK_QUESTIONS, 'ALL', typeFilter, questionCount)
+        generateSession([], categoryFilter, typeFilter, questionCount)
       }
     } catch (err) {
-      console.warn('Không thể kết nối ngân hàng câu hỏi, dùng dữ liệu mẫu:', err)
+      console.error('Lỗi khi tải câu hỏi từ cơ sở dữ liệu:', err)
       setIsFromBank(false)
-      generateSession(FALLBACK_QUESTIONS, 'ALL', typeFilter, questionCount)
+      setRawBankQuestions([])
+      generateSession([], categoryFilter, typeFilter, questionCount)
     } finally {
       setIsLoading(false)
     }
@@ -1266,15 +609,121 @@ export function QuizPage() {
     setQuestionCount(count)
     if (type === 'ESSAY') {
       setLearningMode('ESSAY_STUDY')
+    } else if (learningMode === 'ESSAY_STUDY') {
+      setLearningMode('QUIZ')
     }
 
-    const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : FALLBACK_QUESTIONS
+    const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : []
     generateSession(pool, cat, type, count)
+  }
+
+  // Danh sách các bài tự luận & án lệ độc lập từ Ngân hàng câu hỏi thật trong Database (Không dùng data giả)
+  const allEssayItems = useMemo(() => {
+    // 1. Trích xuất câu hỏi tự luận hợp lệ từ CSDL theo bộ phân loại chuẩn
+    const validBankEssays = rawBankQuestions.filter(q => classifyQuestion(q) === 'ESSAY')
+
+    // 2. Chuyển đổi trực tiếp các bài tự luận từ CSDL thành QuizQuestionItem
+    const result: QuizQuestionItem[] = validBankEssays.map((q, idx) => ({
+      id: q.id,
+      category: q.category || 'Pháp luật CAND',
+      title: q.title || `BÀI TỰ LUẬN #${String(idx + 1).padStart(2, '0')}`,
+      questionType: 'ESSAY',
+      question: q.questionText,
+      options: [],
+      correctAnswer: 0,
+      textAnswer: '',
+      sampleEssay: q.sampleEssay || q.explanation || '',
+      explanation: q.explanation || '',
+      legalReference: q.legalReference || ''
+    }))
+
+    // 3. Lọc theo chuyên đề nếu đang chọn chuyên đề riêng
+    if (categoryFilter !== 'ALL') {
+      const filtered = result.filter(e => e.category?.toLowerCase() === categoryFilter.toLowerCase())
+      return filtered
+    }
+
+    return result
+  }, [rawBankQuestions, categoryFilter])
+
+  // Vị trí của bài thi đang xem trong toàn bộ danh sách tự luận
+  const currentA4Idx = useMemo(() => {
+    if (!selectedA4Essay) return -1
+    return allEssayItems.findIndex(e => e.id === selectedA4Essay.id)
+  }, [selectedA4Essay, allEssayItems])
+
+  const handleA4Prev = () => {
+    if (currentA4Idx > 0) {
+      setSelectedA4Essay(allEssayItems[currentA4Idx - 1])
+    }
+  }
+
+  const handleA4Next = () => {
+    if (currentA4Idx < allEssayItems.length - 1) {
+      setSelectedA4Essay(allEssayItems[currentA4Idx + 1])
+    }
+  }
+
+  const handleCopyFullA4Document = (essay: QuizQuestionItem) => {
+    const formattedText = `BỘ CÔNG AN - TRƯỜNG ĐẠI HỌC CẢNH SÁT NHÂN DÂN
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM - Độc lập - Tự do - Hạnh phúc
+------------------------------------------------------------
+TÀI LIỆU ÔN THI TUYỂN SINH VĂN BẰNG 2 CAND: BÀI TỰ LUẬN & ĐÁP ÁN MẪU T05
+Chuyên đề: ${essay.category || 'Pháp luật CAND'}
+Thang điểm: 30 điểm • Thời gian làm bài: 90 phút
+
+PHẦN I: ĐỀ BÀI VĂN NGHỊ LUẬN (30 ĐIỂM)
+${essay.question}
+
+PHẦN II: HƯỚNG DẪN DÀN Ý & BÀI LÀM MẪU CHUẨN ĐIỂM 10
+${essay.sampleEssay || essay.explanation || ''}
+
+${essay.legalReference ? `CĂN CỨ PHÁP LÝ & TÀI LIỆU ĐỐI CHIẾU:\n${essay.legalReference}` : ''}
+------------------------------------------------------------
+Lưu hành nội bộ - Trường Đại học Cảnh sát Nhân dân`
+
+    navigator.clipboard.writeText(formattedText)
+    setIsCopiedA4(true)
+    toast.success('Đã sao chép toàn bộ tài liệu A4 vào clipboard!')
+    setTimeout(() => setIsCopiedA4(false), 2000)
+  }
+
+  // Xuất tài liệu tự luận trực tiếp ra file PDF (Tải file về máy, không mở hộp thoại in)
+  const handleExportA4ToPdf = async () => {
+    if (!selectedA4Essay || isExportingPdf) return
+    const element = document.getElementById('a4-print-sheet')
+    if (!element) {
+      toast.error('Không tìm thấy nội dung tờ giấy thi để xuất file!')
+      return
+    }
+
+    setIsExportingPdf(true)
+    const toastId = toast.loading('Đang xử lý và xuất file PDF...')
+
+    try {
+      const cleanTitle = (selectedA4Essay.title || 'Bai_Tu_Luan_T05')
+        .replace(/[\\/:*?"<>|]/g, '_')
+        .replace(/\s+/g, '_')
+        .trim()
+      const fileName = `${cleanTitle}_T05.pdf`
+
+      await exportElementToPdf(element, {
+        fileName,
+        marginMm: 8,
+      })
+
+      toast.success(`Đã xuất và tải file PDF "${fileName}" về máy!`, { id: toastId })
+    } catch (err: any) {
+      console.error('Lỗi khi xuất file PDF:', err)
+      toast.error('Không thể xuất file PDF: ' + (err?.message || 'Đã có lỗi xảy ra'), { id: toastId })
+    } finally {
+      setIsExportingPdf(false)
+    }
   }
 
   // Tái tạo lại danh sách câu hỏi ngẫu nhiên mới
   const handleReshuffle = () => {
-    const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : FALLBACK_QUESTIONS
+    const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : []
     generateSession(pool, categoryFilter, typeFilter, questionCount)
     toast.success('Đã trộn ngẫu nhiên bộ câu hỏi mới từ Ngân Hàng!')
   }
@@ -1380,7 +829,7 @@ export function QuizPage() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/70 bg-white/90 dark:bg-slate-900/90 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/40 text-xs font-bold text-emerald-800 dark:text-emerald-300 shadow-xs hover:border-emerald-400 transition-all cursor-pointer"
               title="Lấy ngẫu nhiên bộ câu hỏi khác"
             >
-              <Shuffle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <RealisticDice3DIcon size={16} />
               <span>Đổi Bộ Khác</span>
             </button>
 
@@ -1388,7 +837,7 @@ export function QuizPage() {
               onClick={() => navigate('/question-bank')}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-500/25 hover:shadow-lg transition-all cursor-pointer"
             >
-              <Layers className="h-4 w-4" />
+              <RealisticVault3DIcon size={16} />
               <span>Ngân Hàng Câu Hỏi</span>
             </button>
           </div>
@@ -1407,6 +856,11 @@ export function QuizPage() {
               onClick={() => {
                 setLearningMode('FLASHCARD')
                 setIsFlipped(false)
+                if (typeFilter === 'ESSAY') {
+                  setTypeFilter('ALL')
+                  const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : []
+                  generateSession(pool, categoryFilter, 'ALL', questionCount)
+                }
               }}
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer",
@@ -1415,7 +869,7 @@ export function QuizPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               )}
             >
-              <BookOpen className="h-4 w-4 shrink-0" />
+              <RealisticFlashcard3DIcon size={18} />
               <span>Thẻ Flashcard 3D</span>
             </button>
 
@@ -1424,6 +878,11 @@ export function QuizPage() {
                 setLearningMode('QUIZ')
                 setSelectedOption(null)
                 setIsAnswered(false)
+                if (typeFilter === 'ESSAY') {
+                  setTypeFilter('ALL')
+                  const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : []
+                  generateSession(pool, categoryFilter, 'ALL', questionCount)
+                }
               }}
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer",
@@ -1432,7 +891,7 @@ export function QuizPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               )}
             >
-              <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+              <RealisticQuiz3DIcon size={18} />
               <span>Trắc Nghiệm</span>
             </button>
 
@@ -1440,8 +899,6 @@ export function QuizPage() {
               onClick={() => {
                 setLearningMode('ESSAY_STUDY')
                 setTypeFilter('ESSAY')
-                const pool = rawBankQuestions.length > 0 ? convertToQuizItems(rawBankQuestions) : FALLBACK_QUESTIONS
-                generateSession(pool, categoryFilter, 'ESSAY', questionCount)
               }}
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer",
@@ -1450,19 +907,23 @@ export function QuizPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               )}
             >
-              <PenTool className="h-4 w-4 text-emerald-500 shrink-0" />
+              <RealisticEssay3DIcon size={18} />
               <span>Tự Luận & Án Lệ</span>
             </button>
           </div>
 
           {/* Filter Chuyên đề */}
-          <div className="md:col-span-4">
+          <div className={cn(learningMode === 'ESSAY_STUDY' ? "md:col-span-7" : "md:col-span-4")}>
             <select
               value={categoryFilter}
               onChange={(e) => handleFilterChange(e.target.value, typeFilter, questionCount)}
               className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#5d5fef]/40"
             >
-              <option value="ALL">Tất cả chuyên đề ({rawBankQuestions.length || FALLBACK_QUESTIONS.length} câu)</option>
+              <option value="ALL">
+                {learningMode === 'ESSAY_STUDY'
+                  ? `Tất cả chuyên đề (${allEssayItems.length} bài tự luận)`
+                  : `Tất cả chuyên đề (${rawBankQuestions.length} câu)`}
+              </option>
               {availableCategories.map((c, i) => (
                 <option key={i} value={c}>
                   {c}
@@ -1471,68 +932,83 @@ export function QuizPage() {
             </select>
           </div>
 
-          {/* Filter Số lượng câu hỏi */}
-          <div className="md:col-span-3 flex items-center justify-end gap-1.5">
-            <span className="text-xs font-bold text-slate-500">Quy mô:</span>
-            {[
-              { label: '30 câu', val: 30 },
-              { label: '60 câu', val: 60 },
-              { label: 'Toàn bộ', val: 500 }
-            ].map((item) => (
-              <button
-                key={item.val}
-                onClick={() => handleFilterChange(categoryFilter, typeFilter, item.val)}
-                className={cn(
-                  "px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap",
-                  questionCount === item.val
-                    ? "bg-[#5d5fef] text-white shadow-xs ring-1 ring-[#5d5fef]"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          {/* Filter Số lượng câu hỏi: Chỉ hiển thị khi là Trắc Nghiệm / Flashcard */}
+          {learningMode !== 'ESSAY_STUDY' && (
+            <div className="md:col-span-3 flex items-center justify-end gap-1.5">
+              <div className="flex items-center gap-1 text-xs font-bold text-slate-500 mr-0.5">
+                <RealisticScale3DIcon size={15} />
+                <span>Quy mô:</span>
+              </div>
+              {[
+                { label: '60 câu', val: 60 },
+                { label: 'Toàn bộ', val: 500 }
+              ].map((item) => (
+                <button
+                  key={item.val}
+                  onClick={() => handleFilterChange(categoryFilter, typeFilter, item.val)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap",
+                    questionCount === item.val
+                      ? "bg-[#5d5fef] text-white shadow-xs ring-1 ring-[#5d5fef]"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
 
         </div>
 
         {/* Hàng 2: Tách biệt các phân loại câu hỏi ôn luyện + BỘ CHỈNH CỠ CHỮ THÔNG MINH */}
         <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 mr-1">
-              <Layers className="h-4 w-4 text-[#5d5fef]" />
-              <span>Dạng bài:</span>
-            </div>
+          
+          {/* Khi ở chế độ TRẮC NGHIỆM hoặc FLASHCARD: Hiển thị bộ lọc Dạng bài (Tự luận không có dạng bài) */}
+          {learningMode !== 'ESSAY_STUDY' ? (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 mr-1">
+                <RealisticLayers3DIcon size={16} />
+                <span>Dạng bài:</span>
+              </div>
 
-            {[
-              { id: 'ALL', label: '1. Tất cả dạng' },
-              { id: 'MC_CHOICE', label: '2. Trắc nghiệm A B C D' },
-              { id: 'MC_SCENARIO', label: '3. Tình huống nghiệp vụ' },
-              { id: 'MC_FILL', label: '4. Điền đáp án' },
-              { id: 'ESSAY', label: '5. Tự luận & Án lệ' },
-            ].map((tab) => {
-              const isActive = typeFilter === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleFilterChange(categoryFilter, tab.id as QuizQuestionTypeFilter, questionCount)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1",
-                    isActive
-                      ? "bg-[#5d5fef] text-white shadow-xs ring-1 ring-[#5d5fef]"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  )}
-                >
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
+              {[
+                { id: 'ALL', label: '1. Tất cả dạng' },
+                { id: 'MC_CHOICE', label: '2. Trắc nghiệm A B C D' },
+                { id: 'MC_SCENARIO', label: '3. Tình huống nghiệp vụ' },
+                { id: 'MC_FILL', label: '4. Điền đáp án' },
+              ].map((tab) => {
+                const isActive = typeFilter === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleFilterChange(categoryFilter, tab.id as QuizQuestionTypeFilter, questionCount)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1",
+                      isActive
+                        ? "bg-[#5d5fef] text-white shadow-xs ring-1 ring-[#5d5fef]"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    )}
+                  >
+                    <span>{tab.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            /* Khi ở chế độ TỰ LUẬN: ĐÃ XÓA DẠNG BÀI THEO YÊU CẦU, hiển thị badge chuyên mục */
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+                <RealisticEssay3DIcon size={16} />
+                <span>Chuyên mục: Tự Luận & Án Lệ T05 (Mỗi khung là 1 bài ôn tập chuyên sâu)</span>
+              </span>
+            </div>
+          )}
 
           {/* BỘ CHỈNH CỠ CHỮ TIỆN LỢI (A: Chuẩn, A+: To khuyên dùng, A++: Cực to) */}
           <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 self-end sm:self-auto shrink-0">
             <span className="text-xs font-black text-slate-500 dark:text-slate-400 px-1.5 flex items-center gap-1">
-              <Type className="h-3.5 w-3.5" />
+              <RealisticTypography3DIcon size={15} />
               <span>Cỡ chữ:</span>
             </span>
             {[
@@ -1569,8 +1045,647 @@ export function QuizPage() {
         </div>
       )}
 
-      {/* Nội dung chính: Chưa hoàn thành */}
-      {!isLoading && !isFinished && questions.length > 0 && currentQ && (
+      {/* ========================================================= */}
+      {/* PHẦN TỰ LUẬN: MỖI BÀI LÀ MỘT KHUNG CARD NHỎ HIỆN ĐẠI     */}
+      {/* NHẤN "XEM TÀI LIỆU" MỞ TỜ GIẤY THI A4 ĐỀ BÀI & BÀI LÀM    */}
+      {/* ========================================================= */}
+      {!isLoading && learningMode === 'ESSAY_STUDY' && (
+        <div className="space-y-6">
+          {/* Thanh tiêu đề & tác vụ tổng quan */}
+          <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/20 dark:border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="relative group shrink-0">
+                <img 
+                  src="/t05-logo.png" 
+                  alt="ĐH Cảnh Sát Nhân Dân" 
+                  className="h-10 w-10 object-contain rounded-xl p-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 shadow-sm" 
+                />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Danh Sách Bài Nghị Luận & Án Lệ Chuẩn T05</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-extrabold border border-emerald-300 dark:border-emerald-700">
+                    {allEssayItems.length} bài
+                  </span>
+                </h2>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Mỗi khung card đại diện cho một bài tự luận độc lập. Nhấn <strong className="text-emerald-600 dark:text-emerald-400 font-bold">"Xem tài liệu"</strong> để hiển thị tờ giấy A4 chuẩn Bộ Công An với đề bài và bài giải mẫu.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 text-xs font-bold text-slate-500">
+              <span className="hidden md:inline">Thang điểm:</span>
+              <span className="px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 font-extrabold text-[11px]">
+                30 điểm / bài
+              </span>
+            </div>
+          </div>
+
+          {/* Lưới các khung card nhỏ gọn hiện đại (Mỗi bài là 1 khung card) */}
+          {allEssayItems.length === 0 ? (
+            <div className="py-16 px-6 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                <RealisticEssay3DIcon size={36} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-white">
+                  Chưa có bài văn nghị luận / tự luận nào trong Ngân hàng câu hỏi
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  Hệ thống chỉ hiển thị các đề bài tự luận và bài văn mẫu có thật được lưu trong cơ sở dữ liệu. Vui lòng thêm đề bài trong Ngân hàng câu hỏi hoặc chọn chuyên đề khác.
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={loadQuestionBankData}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Đồng bộ lại dữ liệu</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/question-bank')}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  <RealisticVault3DIcon size={14} />
+                  <span>Vào Ngân Hàng Câu Hỏi</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5 w-full">
+              {allEssayItems.map((essay, idx) => {
+                const isSaved = bookmarkedIds.has(essay.id)
+                const draftText = essayDrafts[essay.id] || ''
+                const wordCount = countWords(draftText)
+
+                return (
+                  <div
+                    key={essay.id}
+                    className="group relative bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/60 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-hidden"
+                  >
+                    {/* Vạch màu viền trái tinh tế */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-teal-500 to-emerald-700" />
+
+                    {/* Khối bên trái: Số thứ tự bài, logo T05 & Thang điểm */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <img
+                        src="/t05-logo.png"
+                        alt="ĐH Cảnh Sát Nhân Dân"
+                        className="h-7 w-7 object-contain rounded-md shrink-0 border border-emerald-300/80 dark:border-emerald-700/80 bg-white dark:bg-slate-800 p-0.5 shadow-2xs"
+                      />
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 whitespace-nowrap">
+                        BÀI #{String(idx + 1).padStart(2, '0')}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                        30đ
+                      </span>
+                    </div>
+
+                    {/* Khối giữa: Chuyên đề, Tiêu đề bài & Trích đoạn câu hỏi */}
+                    <div className="flex-1 min-w-0 space-y-1">
+                      {/* Hàng 1: Chuyên đề + Tiêu đề + Chỉ báo dàn ý */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {essay.category && (
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
+                            {essay.category}
+                          </span>
+                        )}
+                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          {essay.title || `Bài Nghị Luận Tự Luận #${idx + 1}`}
+                        </h3>
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hidden md:inline-flex items-center gap-1 shrink-0">
+                          ✓ Dàn ý T05
+                        </span>
+                        {wordCount > 0 && (
+                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800 shrink-0">
+                            ✍️ {wordCount} từ
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Hàng 2: Trích đoạn câu hỏi rút gọn 1 dòng */}
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-normal">
+                        {cleanVietnameseTypography(essay.question)}
+                      </p>
+                    </div>
+
+                    {/* Khối bên phải: Nút Xem Tài Liệu & Nút Hành Động nhỏ gọn */}
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleBookmark(essay.id)}
+                        className={cn(
+                          "p-1.5 rounded-lg border transition-all cursor-pointer",
+                          isSaved
+                            ? "bg-amber-500/10 border-amber-500/40 text-amber-600"
+                            : "border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                        )}
+                        title={isSaved ? "Bỏ lưu bài học" : "Lưu vào danh sách ôn tập"}
+                      >
+                        <RealisticRibbon3DIcon size={14} isSaved={isSaved} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(essay.question)
+                          toast.success('Đã sao chép đề bài vào clipboard!')
+                        }}
+                        className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                        title="Sao chép đề bài"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedA4Essay(essay)
+                          setIsA4DraftOpen(false)
+                        }}
+                        className="py-1.5 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
+                      >
+                        <span>Xem Tài Liệu</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODAL / XEM TÀI LIỆU NHƯ 1 TỜ GIẤY A4 CHUẨN BỘ CÔNG AN      */}
+          {/* Ở TRÊN LÀ ĐỀ BÀI - Ở DƯỚI LÀ BÀI LÀM FORMAT RÕ RÀNG DỄ HỌC */}
+          {/* ========================================================= */}
+          {selectedA4Essay && (
+            <div className="fixed inset-0 z-50 bg-white dark:bg-[#0b0f19] overflow-y-auto p-2 sm:p-4 md:p-6 flex flex-col items-center animate-in fade-in duration-200 font-sans">
+              
+              {/* THANH ĐIỀU KHIỂN NỔI (STICKY TOP ACTION BAR) */}
+              <div className="w-full max-w-4xl flex items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-4 sticky top-2 z-20 no-print font-sans">
+                {/* Nút quay lại & Điều hướng bài */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedA4Essay(null)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span>Quay Lại</span>
+                  </button>
+
+                  <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
+
+                  {/* Chuyển bài trước / sau */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={handleA4Prev}
+                      disabled={currentA4Idx <= 0}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                      title="Bài trước"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs font-bold px-2 text-slate-600 dark:text-slate-300 hidden sm:inline">
+                      Bài {currentA4Idx + 1} / {allEssayItems.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleA4Next}
+                      disabled={currentA4Idx >= allEssayItems.length - 1}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                      title="Bài tiếp theo"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Các công cụ: Cỡ chữ, In, Copy, Vở nháp, Đóng */}
+                <div className="flex items-center gap-2">
+                  {/* Chỉnh Cỡ Chữ A | A+ | A++ */}
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-black">
+                    {(['normal', 'large', 'xlarge'] as const).map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => handleFontSizeChange(sz)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md transition-all cursor-pointer",
+                          quizFontSize === sz
+                            ? "bg-white dark:bg-slate-900 text-emerald-700 shadow-xs border border-slate-200 dark:border-slate-600 font-black"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                        )}
+                      >
+                        {sz === 'normal' ? 'A' : sz === 'large' ? 'A+' : 'A++'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Nút Sao Chép Toàn Bộ Tài Liệu */}
+                  <button
+                    type="button"
+                    onClick={() => handleCopyFullA4Document(selectedA4Essay)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                    title="Sao chép toàn bộ đề bài và bài làm"
+                  >
+                    {isCopiedA4 ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-slate-500" />}
+                    <span className="hidden md:inline">{isCopiedA4 ? 'Đã chép' : 'Sao Chép'}</span>
+                  </button>
+
+                  {/* Nút Xuất Ra File PDF Trực Tiếp (Tải về máy, không mở hộp thoại in) */}
+                  <button
+                    type="button"
+                    disabled={isExportingPdf}
+                    onClick={handleExportA4ToPdf}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 disabled:opacity-60 transition-all cursor-pointer shadow-2xs"
+                    title="Xuất trực tiếp file PDF về máy tính"
+                  >
+                    {isExportingPdf ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-emerald-700 dark:text-emerald-400" />
+                    ) : (
+                      <RealisticPdf3DIcon size={18} />
+                    )}
+                    <span>{isExportingPdf ? 'Đang xuất PDF...' : 'Xuất ra file PDF'}</span>
+                  </button>
+
+                  {/* Nút Bật/Tắt Vở Nháp Viết Bài */}
+                  <button
+                    type="button"
+                    onClick={() => setIsA4DraftOpen(!isA4DraftOpen)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer border",
+                      isA4DraftOpen
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+                    )}
+                    title="Mở vở nháp để tự rèn luyện viết"
+                  >
+                    <RealisticNotebook3DIcon size={16} />
+                    <span className="hidden md:inline">{isA4DraftOpen ? 'Đóng Nháp' : 'Vở Nháp'}</span>
+                  </button>
+
+                  {/* Nút đóng */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedA4Essay(null)}
+                    className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer border border-transparent hover:border-slate-200"
+                    title="Đóng cửa sổ"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* TỜ GIẤY THI A4 CHUẨN BỘ CÔNG AN (ĐỀ BÀI Ở TRÊN, BÀI LÀM Ở DƯỚI) */}
+              {/* CHỈ KHUNG BÊN NGOÀI NÀY LÀ KHÔNG BO TRÒN (ROUNDED-NONE) ĐỂ MÔ PHỎNG TỜ GIẤY A4 THẬT */}
+              <div
+                id="a4-print-sheet"
+                className="w-full max-w-4xl bg-white text-slate-900 shadow-xl rounded-none border border-slate-300 p-5 sm:p-8 relative font-sans select-text my-2"
+              >
+                {/* 1. QUỐC HIỆU & TIÊU NGỮ CHUẨN BỘ CÔNG AN (THIẾT KẾ HIỆN ĐẠI, NHỎ GỌN, TRANG TRỌNG) */}
+                <div className="relative pb-2.5 border-b border-slate-200 font-sans">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-center sm:text-left">
+                    {/* Cột trái: Cơ quan ban hành */}
+                    <div className="space-y-0.5 w-full sm:w-auto text-center sm:text-left">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        BỘ CÔNG AN
+                      </div>
+                      <div className="text-xs sm:text-sm font-black uppercase text-[#064e3b] tracking-tight">
+                        TRƯỜNG ĐẠI HỌC CẢNH SÁT NHÂN DÂN
+                      </div>
+                      <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">
+                        HỘI ĐỒNG TUYỂN SINH VĂN BẰNG 2 CAND
+                      </div>
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          Số: 05/TL-T05/2026 • Lưu hành nội bộ
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cột phải: Quốc hiệu, Tiêu ngữ */}
+                    <div className="space-y-0.5 w-full sm:w-auto text-center sm:text-right">
+                      <div className="text-[11px] sm:text-xs font-black uppercase text-slate-900 tracking-wider">
+                        CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+                      </div>
+                      <div className="text-[11px] sm:text-xs font-bold text-slate-800 italic flex items-center justify-center sm:justify-end gap-1">
+                        <span className="underline decoration-amber-500 decoration-1 underline-offset-2">
+                          Độc lập - Tự do - Hạnh phúc
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 italic pt-0.5">
+                        TP. Hồ Chí Minh, năm 2026
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. KHUNG ĐIỂM SỐ VÀ LỜI PHÊ GIÁM KHẢO (BẢN THẨM ĐỊNH HIỆN ĐẠI, GỌN GÀNG, TINH TẾ) */}
+                <div className="my-3 rounded-xl border border-slate-200/90 shadow-2xs bg-gradient-to-br from-slate-50/70 via-white to-emerald-50/25 overflow-hidden font-sans">
+                  {/* Dải gradient trang trí phía trên */}
+                  <div className="h-0.5 w-full bg-gradient-to-r from-emerald-600 via-amber-500 to-emerald-700" />
+
+                  <div className="grid grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
+                    {/* Cột trái: Điểm số gọn gàng */}
+                    <div className="col-span-12 sm:col-span-4 p-2.5 sm:p-3 flex flex-col items-center justify-center text-center space-y-1 bg-slate-50/40">
+                      <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-600">
+                        <RealisticRibbon3DIcon size={13} isSaved={true} />
+                        <span>ĐIỂM SỐ CHÍNH THỨC</span>
+                      </div>
+
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-2xl sm:text-3xl font-black text-emerald-800 tracking-tight">
+                          30
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-slate-400">
+                          / 30
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100/90 text-emerald-900 border border-emerald-300/70 shadow-2xs">
+                          Bằng chữ: Ba mươi điểm
+                        </span>
+                        <span className="text-[9px] font-bold text-emerald-700 flex items-center gap-1">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                          Đạt chuẩn điểm tối đa T05
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cột phải: Lời phê & Ký duyệt gọn gàng */}
+                    <div className="col-span-12 sm:col-span-8 p-2.5 sm:p-3 flex flex-col justify-between space-y-2">
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-black uppercase tracking-wide text-slate-700 flex items-center justify-between">
+                          <span>LỜI PHÊ CỦA HỘI ĐỒNG CHẤM THI / GIẢNG VIÊN HƯỚNG DẪN</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hidden sm:inline-block">
+                            Đã thẩm định
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs text-[11px] text-slate-700 italic leading-relaxed">
+                          • Đạt chuẩn kiến thức lý luận và phương pháp lập luận theo hướng dẫn đáp án chuẩn T05; kết cấu chặt chẽ, luận cứ xác đáng, thể hiện tư duy nghiệp vụ và tư tưởng chính trị vững vàng.
+                        </div>
+                      </div>
+
+                      {/* Hai ô ký tên CB chấm thi - hàng nhỏ gọn */}
+                      <div className="grid grid-cols-2 gap-3 pt-1 text-[10px] text-slate-600 border-t border-slate-100">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-slate-800 uppercase text-[9px]">CÁN BỘ CHẤM 1:</div>
+                          <div className="text-slate-400 italic text-[9px]">(Ký & ghi rõ họ tên)</div>
+                          <div className="text-[9px] text-slate-400 border-b border-dashed border-slate-300 pt-0.5">Giảng viên chấm 1: .....................</div>
+                        </div>
+
+                        <div className="space-y-0.5 text-right sm:text-left">
+                          <div className="font-bold text-slate-800 uppercase text-[9px]">CÁN BỘ CHẤM 2:</div>
+                          <div className="text-slate-400 italic text-[9px]">(Ký & ghi rõ họ tên)</div>
+                          <div className="text-[9px] text-slate-400 border-b border-dashed border-slate-300 pt-0.5">Giảng viên chấm 2: .....................</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. TIÊU ĐỀ TÀI LIỆU VĂN BẰNG 2 (BANNER GỌN GÀNG, SANG TRỌNG) */}
+                <div className="text-center py-2.5 space-y-1.5 border-b border-slate-200 font-sans">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 shadow-2xs">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                    <span className="text-[9px] font-black uppercase tracking-wider text-emerald-900">
+                      TÀI LIỆU ÔN THI CHÍNH THỨC • TUYỂN SINH VĂN BẰNG 2 CAND
+                    </span>
+                  </div>
+
+                  <h1 className="text-base sm:text-lg md:text-xl font-black uppercase tracking-tight text-slate-900 font-sans">
+                    HƯỚNG DẪN BÀI THI TỰ LUẬN & ĐÁP ÁN MẪU CHUẨN T05
+                  </h1>
+
+                  {/* Thanh Badges Thông Tin Đề Thi Gọn Gàng */}
+                  <div className="flex items-center justify-center flex-wrap gap-1.5 pt-0.5 text-[11px]">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 shadow-2xs flex items-center gap-1">
+                      <span className="text-slate-500 font-medium">Chuyên đề:</span>
+                      <strong className="text-emerald-900">{selectedA4Essay.category || 'Pháp luật CAND'}</strong>
+                    </span>
+
+                    <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 font-bold border border-amber-200 shadow-2xs flex items-center gap-1">
+                      <span className="text-slate-500 font-medium">Thang điểm:</span>
+                      <strong className="text-amber-900">30 / 30 điểm</strong>
+                    </span>
+
+                    <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-bold border border-blue-200 shadow-2xs flex items-center gap-1">
+                      <span className="text-slate-500 font-medium">Thời gian:</span>
+                      <strong className="text-blue-900">90 phút</strong>
+                    </span>
+
+                    <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 font-bold border border-purple-200 shadow-2xs hidden sm:flex items-center gap-1">
+                      <span className="text-slate-500 font-medium">Quy chuẩn:</span>
+                      <strong className="text-purple-900">Đáp án chuẩn T05</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* ========================================================= */}
+                {/* 4. Ở TRÊN LÀ ĐỀ BÀI (PHẦN I: ĐỀ BÀI VĂN NGHỊ LUẬN)        */}
+                {/* IN TRỰC TIẾP NHƯ TRÊN TỜ GIẤY THI, CÂN ĐỐI VÀ TRANG TRỌNG */}
+                {/* ========================================================= */}
+                <div className="my-5 space-y-3 font-sans">
+                  <div className="border-b-2 border-slate-900 pb-1.5 flex items-center justify-between font-sans">
+                    <h2 className="text-xs sm:text-sm font-black uppercase tracking-wide text-slate-900 font-sans flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-700" />
+                      PHẦN I. ĐỀ BÀI (CÂU HỎI TỰ LUẬN - THANG ĐIỂM 30 ĐIỂM)
+                    </h2>
+                    <span className="text-xs font-semibold text-slate-600 italic">
+                      90 phút
+                    </span>
+                  </div>
+
+                  <div className="py-1 text-slate-900 font-sans space-y-3">
+                    <FormattedExamQuestionPrompt
+                      question={selectedA4Essay.question}
+                      fontSize={quizFontSize}
+                    />
+
+                    <div className="text-xs text-slate-600 italic pt-2.5 border-t border-dashed border-slate-200 flex items-start gap-1.5 font-sans">
+                      <span className="font-bold text-slate-800 not-italic shrink-0">* Yêu cầu làm bài:</span>
+                      <span className="text-justify leading-relaxed">
+                        Thí sinh viết bài văn nghị luận hoàn chỉnh (tối thiểu 500 từ), kết cấu 3 phần Mở bài - Thân bài - Kết bài; lập luận chặt chẽ, lý lẽ sắc bén, dẫn chứng thuyết phục gắn liền với chức năng, nhiệm vụ bảo vệ an ninh trật tự của lực lượng CAND.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ========================================================= */}
+                {/* 5. Ở DƯỚI LÀ BÀI LÀM (PHẦN II: DÀN Ý & BÀI LÀM MẪU)        */}
+                {/* NỘI DUNG CHẢY TỰ NHIÊN NHƯ BÀI VIẾT TRÊN TRANG GIẤY HỌC   */}
+                {/* ========================================================= */}
+                <div className="my-6 space-y-3 font-sans">
+                  <div className="border-b-2 border-slate-900 pb-1 flex items-center justify-between font-sans">
+                    <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wide text-slate-900 font-sans">
+                      PHẦN II. BÀI LÀM & ĐÁP ÁN GỢI Ý CHUẨN T05
+                    </h2>
+                    <span className="text-xs font-bold text-emerald-800 font-sans">
+                      Điểm tối đa: 30/30
+                    </span>
+                  </div>
+
+                  {/* Nội dung bài làm phân cấp tự nhiên như trang giáo trình / bài thi */}
+                  <FormattedEssayContent
+                    content={selectedA4Essay.sampleEssay || selectedA4Essay.explanation}
+                    fontSize={quizFontSize}
+                  />
+
+                  {/* Căn cứ pháp lý theo kiểu trích dẫn văn bản học thuật */}
+                  {selectedA4Essay.legalReference && (
+                    <div className="mt-8 pt-3 border-t border-slate-300 text-xs sm:text-sm font-sans text-slate-700 space-y-1">
+                      <div className="font-bold uppercase tracking-wider text-slate-900 text-[11px] sm:text-xs">
+                        ❖ CĂN CỨ PHÁP LÝ & TÀI LIỆU ĐỐI CHIẾU:
+                      </div>
+                      <div className="italic text-slate-800 pl-4">
+                        {cleanVietnameseTypography(selectedA4Essay.legalReference)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 6. CHÂN TỜ GIẤY THI: KÝ DUYỆT CỦA CÁN BỘ CHẤM THI */}
+                <div className="mt-10 pt-5 border-t-2 border-slate-900 flex items-start justify-between text-xs text-slate-700 font-sans">
+                  <div className="space-y-1">
+                    <div className="font-bold uppercase text-slate-800">CÁN BỘ CHẤM THI 1:</div>
+                    <div className="italic text-slate-500 text-[11px]">(Ký và ghi rõ họ tên)</div>
+                    <div className="h-12 flex items-end">
+                      <span className="text-[11px] text-slate-400">Giảng viên chấm 1: .............................</span>
+                    </div>
+                  </div>
+
+                  <div className="text-center space-y-1">
+                    <div className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">
+                      ---------------- HẾT ----------------
+                    </div>
+                    <div className="italic text-[10px] text-slate-500">
+                      (Cán bộ chấm thi không giải thích gì thêm)
+                    </div>
+                    <div className="text-[10px] text-slate-400 pt-2">
+                      Tài liệu lưu hành nội bộ Trường Đại học Cảnh Sát Nhân Dân
+                    </div>
+                  </div>
+
+                  <div className="text-right space-y-1">
+                    <div className="font-bold uppercase text-slate-800">CÁN BỘ CHẤM THI 2:</div>
+                    <div className="italic text-slate-500 text-[11px]">(Ký và ghi rõ họ tên)</div>
+                    <div className="h-12 flex items-end justify-end">
+                      <span className="text-[11px] text-slate-400">Giảng viên chấm 2: .............................</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7. DÒNG ĐÁNH SỐ TRANG A4 */}
+                <div className="text-center text-[10px] text-slate-400 pt-4 font-sans">
+                  Tờ giấy thi A4 số {String(currentA4Idx + 1).padStart(2, '0')} • Trang 1/1 • Trường Đại học Cảnh Sát Nhân Dân T05
+                </div>
+              </div>
+
+              {/* ========================================================= */}
+              {/* KHUNG VỞ NHÁP LUYỆN VIẾT BÊN DƯỚI TỜ GIẤY A4 (NẾU MỞ)       */}
+              {/* ========================================================= */}
+              {isA4DraftOpen && (
+                <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 rounded-none p-5 sm:p-7 shadow-md space-y-3.5 my-4 no-print animate-in fade-in duration-200 font-sans">
+                  <div className="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 dark:border-indigo-900/60 pb-3">
+                    <div className="flex items-center gap-2">
+                      <RealisticNotebook3DIcon size={20} />
+                      <h3 className="text-sm sm:text-base font-black text-indigo-950 dark:text-indigo-200 uppercase font-sans">
+                        Vở Nháp Luyện Viết Dành Cho Học Viên
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <span className={cn(
+                        "px-3 py-1 rounded-none font-black",
+                        countWords(essayDrafts[selectedA4Essay.id] || '') >= 500
+                          ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
+                          : "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 border border-indigo-200 dark:border-indigo-800"
+                      )}>
+                        {countWords(essayDrafts[selectedA4Essay.id] || '')} từ {countWords(essayDrafts[selectedA4Essay.id] || '') < 500 ? '(Đề xuất: ≥ 500 từ)' : '✓ Đạt chuẩn dung lượng'}
+                      </span>
+                      <span className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                        ● Tự động lưu
+                      </span>
+                    </div>
+                  </div>
+
+                  <textarea
+                    rows={10}
+                    value={essayDrafts[selectedA4Essay.id] || ''}
+                    onChange={(e) => handleDraftChange(selectedA4Essay.id, e.target.value)}
+                    placeholder="Thực hành lập dàn ý hoặc viết bài văn tự luận của bạn tại đây để đối chiếu với đáp án mẫu T05 ở trên..."
+                    className="w-full p-4 sm:p-5 rounded-none bg-slate-50 dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 text-sm sm:text-base leading-relaxed resize-y font-sans"
+                  />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-slate-400">
+                      Bản nháp được lưu tự động trên trình duyệt của bạn.
+                    </span>
+                    {(essayDrafts[selectedA4Essay.id] || '').trim() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm('Bạn có chắc muốn xóa bản nháp của bài tự luận này?')) {
+                            handleDraftChange(selectedA4Essay.id, '')
+                            toast.info('Đã xóa bản nháp')
+                          }
+                        }}
+                        className="text-xs text-rose-500 hover:text-rose-600 font-bold hover:underline cursor-pointer"
+                      >
+                        Xóa Bản Nháp
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* PHẦN TRẮC NGHIỆM & FLASHCARD: KHI KHÔNG CÓ CÂU HỎI        */}
+      {/* ========================================================= */}
+      {!isLoading && learningMode !== 'ESSAY_STUDY' && !isFinished && questions.length === 0 && (
+        <div className="py-16 px-6 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-4 max-w-xl mx-auto">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <RealisticVault3DIcon size={36} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base sm:text-lg font-black text-slate-800 dark:text-white">
+              Chưa có câu hỏi phù hợp trong cơ sở dữ liệu
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Không tìm thấy câu hỏi nào cho bộ lọc hiện tại. Toàn bộ câu hỏi được tải trực tiếp từ cơ sở dữ liệu.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => handleFilterChange('ALL', 'ALL', questionCount)}
+              className="px-4 py-2 rounded-xl bg-[#5d5fef] hover:bg-[#4d4fdf] text-white text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Xem Tất Cả Câu Hỏi</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* PHẦN TRẮC NGHIỆM & FLASHCARD: THEO CÂU HỎI STEPPER        */}
+      {/* ========================================================= */}
+      {!isLoading && learningMode !== 'ESSAY_STUDY' && !isFinished && questions.length > 0 && currentQ && (
         <div className="space-y-6">
 
           {/* Thanh Tiến Trình Học */}
@@ -1633,11 +1748,7 @@ export function QuizPage() {
                     )}
                     title="Lưu câu hỏi ôn tập"
                   >
-                    {bookmarkedIds.has(currentQ.id) ? (
-                      <BookmarkCheck className="h-4 w-4" />
-                    ) : (
-                      <Bookmark className="h-4 w-4" />
-                    )}
+                    <RealisticRibbon3DIcon size={16} isSaved={bookmarkedIds.has(currentQ.id)} />
                   </button>
                 </div>
 
@@ -1778,7 +1889,7 @@ export function QuizPage() {
                       {currentQ.questionType === 'ESSAY' && (
                         <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-500/30 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300">
                           <p className="font-bold flex items-center gap-1.5">
-                            <PenTool className="h-4 w-4" />
+                            <RealisticEssay3DIcon size={16} />
                             Gợi ý làm bài tự luận:
                           </p>
                           <p className="mt-1 text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -2025,117 +2136,6 @@ export function QuizPage() {
                   </button>
                 </div>
               )}
-
-            </div>
-          )}
-          {/* ========================================================= */}
-          {/* CHẾ ĐỘ 3: LUYỆN TỰ LUẬN & ÁN LỆ CHUYÊN SÂU                  */}
-          {/* ========================================================= */}
-          {learningMode === 'ESSAY_STUDY' && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-6 md:p-10 space-y-6 shadow-sm">
-              
-              {/* Tiêu đề & Câu hỏi tự luận */}
-              <div className="p-5 md:p-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-lg text-xs font-black uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
-                      Tự Luận & Án Lệ T05
-                    </span>
-                    {currentQ.category && (
-                      <span className="text-xs sm:text-sm font-bold text-slate-500">
-                        • {currentQ.category}
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => toggleBookmark(currentQ.id)}
-                    className={cn(
-                      "p-2.5 rounded-xl border shrink-0 transition-all cursor-pointer",
-                      bookmarkedIds.has(currentQ.id)
-                        ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                        : "border-slate-200 dark:border-slate-700 text-slate-400"
-                    )}
-                    title="Lưu câu hỏi"
-                  >
-                    <Bookmark className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <h2 className={cn(
-                  "font-black text-slate-950 dark:text-white leading-relaxed tracking-normal",
-                  quizFontSize === 'normal' ? "text-lg md:text-xl" : quizFontSize === 'large' ? "text-xl md:text-2xl lg:text-3xl" : "text-2xl md:text-3xl lg:text-4xl"
-                )}>
-                  {currentQ.question}
-                </h2>
-              </div>
-
-              {/* Khu vực Gợi ý & Dàn ý bài mẫu */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PenTool className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                      Dàn Ý & Hướng Dẫn Trả Lời Chuẩn
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setIsFlipped(!isFlipped)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
-                  >
-                    {isFlipped ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    <span>{isFlipped ? 'Ẩn Đáp Án Mẫu' : 'Xem Dàn Ý & Bài Mẫu'}</span>
-                  </button>
-                </div>
-
-                {isFlipped ? (
-                  <div className="p-6 md:p-8 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-500/30 space-y-3.5 animate-in fade-in duration-200">
-                    <span className="text-xs sm:text-sm font-black uppercase text-emerald-700 dark:text-emerald-400 block tracking-wider">
-                      ✓ Dàn bài mẫu & Cơ sở luận cứ T05:
-                    </span>
-                    <div className={cn(
-                      "text-slate-800 dark:text-slate-100 whitespace-pre-line leading-loose font-normal",
-                      quizFontSize === 'normal' ? "text-sm md:text-base" : quizFontSize === 'large' ? "text-base md:text-lg lg:text-xl" : "text-lg md:text-xl lg:text-2xl"
-                    )}>
-                      {currentQ.sampleEssay || currentQ.explanation || 'Nội dung bài viết mẫu đang được cập nhật.'}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-10 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-                    <p className="text-xs sm:text-sm font-bold text-slate-500">
-                      Đáp án mẫu đang được ẩn để bạn tự rèn luyện kỹ năng phân tích và lập dàn ý.
-                    </p>
-                    <button
-                      onClick={() => setIsFlipped(true)}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span>Hiển Thị Bài Viết Mẫu</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Điều khiển chuyển câu */}
-              <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-5">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-30 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span>Câu Trước</span>
-                </button>
-
-                <button
-                  onClick={handleNext}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/20 transition-all cursor-pointer"
-                >
-                  <span>{currentIndex < questions.length - 1 ? 'Câu Tiếp Theo' : 'Hoàn Thành'}</span>
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
 
             </div>
           )}

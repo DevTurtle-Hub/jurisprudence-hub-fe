@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Search,
   Plus,
@@ -23,7 +23,7 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import { questionBankApi } from '@/services/questionBankApi'
@@ -33,10 +33,16 @@ import type {
   QuestionBankMcOptionRequest
 } from '@/types/questionBank'
 import { QuestionBankImportModal } from '@/features/exams/components/QuestionBankImportModal'
+import {
+  QUESTION_CLASSIFICATION_LIST,
+  classifyQuestion,
+  type MainGroupKey
+} from '@/constants/questionClassification'
 import { toast } from 'sonner'
 
 export function QuestionBankPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { currentUser, isLoggedIn, openAuthModal } = useAuth()
 
   // Kiểm tra quyền Admin: chỉ Admin mới có quyền xem & thêm sửa xóa ngân hàng câu hỏi
@@ -46,17 +52,18 @@ export function QuestionBankPage() {
   const [questions, setQuestions] = useState<QuestionBankResponse[]>([])
   const [pageInfo, setPageInfo] = useState({
     page: 1,
-    limit: 10,
+    limit: 100,
     totalPages: 1,
     totalElements: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Bộ lọc: 1. Tất cả, 2. Trắc nghiệm chọn A B C D, 3. Trắc nghiệm điền đáp án
+  // Bộ lọc: 1. Tất cả | 2. Trắc nghiệm (Tình huống, A B C D, Điền từ) | 3. Tự luận
   const [keyword, setKeyword] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [typeFilter, setTypeFilter] = useState<'ALL' | 'MC_CHOICE' | 'MC_FILL'>('ALL')
+  const [mainGroupFilter, setMainGroupFilter] = useState<MainGroupKey>('ALL')
+  const [mcSubFilter, setMcSubFilter] = useState<'MC_ALL' | 'MC_SCENARIO' | 'MC_CHOICE' | 'MC_FILL'>('MC_ALL')
   const [draftFilter, setDraftFilter] = useState<boolean | 'ALL'>('ALL')
 
   // Modal Import / Parse
@@ -65,6 +72,32 @@ export function QuestionBankPage() {
   // Modal Tạo tay / Chỉnh sửa
   const [editingQuestion, setEditingQuestion] = useState<QuestionBankResponse | null>(null)
   const [isCreateManualOpen, setIsCreateManualOpen] = useState(false)
+
+  // Nhận diện action và filter từ Dropdown Menu Sidebar
+  useEffect(() => {
+    if (!location.search) return
+    const params = new URLSearchParams(location.search)
+    const action = params.get('action')
+    if (action === 'import') {
+      setIsImportModalOpen(true)
+    } else if (action === 'create') {
+      setEditingQuestion(null)
+      setIsCreateManualOpen(true)
+    }
+    const type = params.get('type')
+    if (type === 'ESSAY') {
+      setMainGroupFilter('ESSAY')
+    } else if (type === 'MC_SCENARIO') {
+      setMainGroupFilter('MC')
+      setMcSubFilter('MC_SCENARIO')
+    } else if (type === 'MC_CHOICE') {
+      setMainGroupFilter('MC')
+      setMcSubFilter('MC_CHOICE')
+    } else if (type === 'MC_FILL') {
+      setMainGroupFilter('MC')
+      setMcSubFilter('MC_FILL')
+    }
+  }, [location.search])
   const [formTitle, setFormTitle] = useState('')
   const [formType, setFormType] = useState<'MC' | 'ESSAY'>('MC')
   const [formCategory, setFormCategory] = useState('Pháp luật CAND')
@@ -85,6 +118,53 @@ export function QuestionBankPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCopiedEssay, setIsCopiedEssay] = useState(false)
 
+  // Thống kê số lượng câu hỏi theo từng phân loại cho FE sử dụng
+  const questionCounts = useMemo(() => {
+    let essay = 0
+    let scenario = 0
+    let choice = 0
+    let fill = 0
+
+    for (const q of questions) {
+      const type = classifyQuestion(q)
+      if (type === 'ESSAY') essay++
+      else if (type === 'MC_SCENARIO') scenario++
+      else if (type === 'MC_CHOICE') choice++
+      else if (type === 'MC_FILL') fill++
+    }
+
+    return {
+      all: questions.length,
+      mcTotal: scenario + choice + fill,
+      essay,
+      scenario,
+      choice,
+      fill,
+    }
+  }, [questions])
+
+  // Danh sách câu hỏi đã lọc theo phân loại FE
+  const displayedQuestions = useMemo(() => {
+    return questions.filter(q => {
+      const qType = classifyQuestion(q)
+
+      // Lọc theo nhóm chính (Tất cả / Trắc nghiệm / Tự luận)
+      if (mainGroupFilter === 'ESSAY') {
+        return qType === 'ESSAY'
+      }
+
+      if (mainGroupFilter === 'MC') {
+        if (qType === 'ESSAY') return false
+        if (mcSubFilter === 'MC_SCENARIO') return qType === 'MC_SCENARIO'
+        if (mcSubFilter === 'MC_CHOICE') return qType === 'MC_CHOICE'
+        if (mcSubFilter === 'MC_FILL') return qType === 'MC_FILL'
+        return true // 'MC_ALL'
+      }
+
+      return true
+    })
+  }, [questions, mainGroupFilter, mcSubFilter])
+
   // Chi tiết câu hỏi Modal
   const [viewingQuestion, setViewingQuestion] = useState<QuestionBankResponse | null>(null)
 
@@ -97,25 +177,73 @@ export function QuestionBankPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const res = await questionBankApi.getQuestions({
-        page: pageInfo.page,
-        limit: pageInfo.limit,
-        keyword: keyword.trim() || undefined,
-        category: categoryFilter.trim() || undefined,
-        // Backend chỉ nhận 'MC' hoặc 'ESSAY', không nhận MC_CHOICE/MC_FILL
-        questionType: undefined,
-        isDraft: draftFilter === 'ALL' ? undefined : draftFilter,
-      })
+      const cleanKeyword = keyword.trim() || undefined
+      const cleanCategory = categoryFilter.trim() || undefined
 
-      if (res) {
-        setQuestions(res.content || [])
+      if (draftFilter === 'ALL') {
+        // Backend Spring Boot có defaultValue="true" cho param isDraft.
+        // Khi xem "Tất cả trạng thái", gọi đồng thời cả câu đã xuất bản (isDraft: false)
+        // và câu hỏi bản nháp (isDraft: true) để không bỏ sót bài tự luận đã xuất bản.
+        const [pubRes, draftRes] = await Promise.allSettled([
+          questionBankApi.getQuestions({
+            page: 1,
+            limit: Math.max(pageInfo.limit, 100),
+            keyword: cleanKeyword,
+            category: cleanCategory,
+            isDraft: false,
+          }),
+          questionBankApi.getQuestions({
+            page: 1,
+            limit: Math.max(pageInfo.limit, 100),
+            keyword: cleanKeyword,
+            category: cleanCategory,
+            isDraft: true,
+          }),
+        ])
+
+        const pubList = pubRes.status === 'fulfilled' ? pubRes.value?.content || [] : []
+        const draftList = draftRes.status === 'fulfilled' ? draftRes.value?.content || [] : []
+
+        // Kết hợp và loại bỏ trùng ID (ưu tiên bản ghi đã xuất bản)
+        const map = new Map<string, QuestionBankResponse>()
+        pubList.forEach(q => { if (q?.id) map.set(q.id, q) })
+        draftList.forEach(q => { if (q?.id && !map.has(q.id)) map.set(q.id, q) })
+
+        const combined = Array.from(map.values())
+        // Sắp xếp bài mới nhất lên đầu
+        combined.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+          return dateB - dateA
+        })
+
+        setQuestions(combined)
         setPageInfo(prev => ({
           ...prev,
-          totalPages: res.totalPages || 1,
-          totalElements: res.totalElements || 0,
+          page: 1,
+          totalPages: 1,
+          totalElements: combined.length,
         }))
       } else {
-        setQuestions([])
+        const res = await questionBankApi.getQuestions({
+          page: pageInfo.page,
+          limit: pageInfo.limit,
+          keyword: cleanKeyword,
+          category: cleanCategory,
+          questionType: undefined,
+          isDraft: draftFilter,
+        })
+
+        if (res) {
+          setQuestions(res.content || [])
+          setPageInfo(prev => ({
+            ...prev,
+            totalPages: res.totalPages || 1,
+            totalElements: res.totalElements || 0,
+          }))
+        } else {
+          setQuestions([])
+        }
       }
     } catch (err: any) {
       console.error('Lỗi khi tải danh sách ngân hàng câu hỏi:', err)
@@ -124,7 +252,7 @@ export function QuestionBankPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [isAdmin, pageInfo.page, pageInfo.limit, keyword, categoryFilter, typeFilter, draftFilter])
+  }, [isAdmin, pageInfo.page, pageInfo.limit, keyword, categoryFilter, draftFilter])
 
   useEffect(() => {
     if (isAdmin) {
@@ -268,7 +396,7 @@ export function QuestionBankPage() {
         legalReference: formLegalRef.trim() || undefined,
         sampleEssay: formType === 'ESSAY' ? (formSampleEssay.trim() || undefined) : undefined,
         tags: formTags.trim() || undefined,
-        isDraft: editingQuestion ? editingQuestion.isDraft : true,
+        isDraft: editingQuestion ? (editingQuestion.isDraft ?? (editingQuestion as any).draft ?? false) : true,
         options: formType === 'MC'
           ? formOptions.map(opt => ({
               id: opt.id,
@@ -439,111 +567,194 @@ export function QuestionBankPage() {
         </div>
       </div>
 
-      {/* Thanh Bộ Lọc & Tìm Kiếm */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Bộ 3 tab phân loại yêu cầu: 1. Tất cả | 2. Trắc nghiệm chọn A B C D | 3. Trắc nghiệm điền đáp án */}
-        <div className="inline-flex rounded-xl border border-slate-200/80 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-800/60 shadow-2xs">
-          <button
-            type="button"
-            onClick={() => {
-              setTypeFilter('ALL')
-              setPageInfo(p => ({ ...p, page: 1 }))
-            }}
-            className={cn(
-              "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
-              typeFilter === 'ALL'
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            <span>1. Tất cả</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setTypeFilter('MC_CHOICE')
-              setPageInfo(p => ({ ...p, page: 1 }))
-            }}
-            className={cn(
-              "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
-              typeFilter === 'MC_CHOICE'
-                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            <span>2. Trắc nghiệm chọn A B C D</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setTypeFilter('MC_FILL')
-              setPageInfo(p => ({ ...p, page: 1 }))
-            }}
-            className={cn(
-              "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
-              typeFilter === 'MC_FILL'
-                ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            <span>3. Trắc nghiệm điền đáp án</span>
-          </button>
-        </div>
-
-        {/* Tìm kiếm & Lọc bổ sung */}
-        <div className="flex items-center gap-2 flex-1 justify-end flex-wrap">
-          {/* Tìm kiếm */}
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Tìm nội dung, tiêu đề..."
-              value={keyword}
-              onChange={(e) => {
-                setKeyword(e.target.value)
-                setPageInfo(p => ({ ...p, page: 1 }))
+      {/* Thanh Bộ Lọc Phân Loại Cấp 1 & Cấp 2 */}
+      <div className="space-y-3">
+        {/* Hàng 1: 2 Option chính (Trắc nghiệm & Tự luận) cùng với 1. Tất cả */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          
+          {/* Nhóm nút chính: 1. Tất cả | 2. Trắc nghiệm | 3. Tự luận */}
+          <div className="inline-flex rounded-xl border border-slate-200/80 dark:border-slate-700 p-1 bg-slate-50 dark:bg-slate-800/60 shadow-2xs overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setMainGroupFilter('ALL')
+                setMcSubFilter('MC_ALL')
               }}
-              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-            />
+              className={cn(
+                "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap",
+                mainGroupFilter === 'ALL'
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <span>1. Tất cả</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-black",
+                mainGroupFilter === 'ALL' ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+              )}>
+                {questionCounts.all}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMainGroupFilter('MC')
+              }}
+              className={cn(
+                "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap",
+                mainGroupFilter === 'MC'
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <span>2. Trắc nghiệm</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-black",
+                mainGroupFilter === 'MC' ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+              )}>
+                {questionCounts.mcTotal}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMainGroupFilter('ESSAY')
+              }}
+              className={cn(
+                "px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap",
+                mainGroupFilter === 'ESSAY'
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <span>3. Tự luận</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-black",
+                mainGroupFilter === 'ESSAY' ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+              )}>
+                {questionCounts.essay}
+              </span>
+            </button>
           </div>
 
-          {/* Lọc chuyên mục */}
-          <input
-            type="text"
-            placeholder="Lọc danh mục..."
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value)
-              setPageInfo(p => ({ ...p, page: 1 }))
-            }}
-            className="px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white w-32"
-          />
+          {/* Tìm kiếm & Lọc bổ sung */}
+          <div className="flex items-center gap-2 flex-1 justify-end flex-wrap">
+            <div className="relative flex-1 min-w-[180px] max-w-xs">
+              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Tìm nội dung, tiêu đề..."
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value)
+                  setPageInfo(p => ({ ...p, page: 1 }))
+                }}
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+              />
+            </div>
 
-          {/* Lọc trạng thái Draft / Published */}
-          <select
-            value={draftFilter === 'ALL' ? 'ALL' : draftFilter ? 'DRAFT' : 'PUBLISHED'}
-            onChange={(e) => {
-              const val = e.target.value
-              setDraftFilter(val === 'ALL' ? 'ALL' : val === 'DRAFT')
-              setPageInfo(p => ({ ...p, page: 1 }))
-            }}
-            className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold"
-          >
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="DRAFT">Bản nháp (Draft)</option>
-            <option value="PUBLISHED">Đã xuất bản (Published)</option>
-          </select>
+            <input
+              type="text"
+              placeholder="Lọc danh mục..."
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value)
+                setPageInfo(p => ({ ...p, page: 1 }))
+              }}
+              className="w-36 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+            />
 
-          <button
-            onClick={fetchQuestions}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Làm mới"
-          >
-            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-          </button>
+            <select
+              value={draftFilter === 'ALL' ? 'ALL' : draftFilter ? 'DRAFT' : 'PUBLISHED'}
+              onChange={(e) => {
+                const val = e.target.value
+                setDraftFilter(val === 'ALL' ? 'ALL' : val === 'DRAFT')
+                setPageInfo(p => ({ ...p, page: 1 }))
+              }}
+              className="px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="PUBLISHED">Đã xuất bản (Published)</option>
+              <option value="DRAFT">Bản nháp (Draft)</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={fetchQuestions}
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Làm mới"
+            >
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </button>
+          </div>
         </div>
+
+        {/* Hàng 2: Khi chọn "Trắc nghiệm" -> Hiển thị các phân loại con: Tình huống, Chọn A B C D, Điền từ */}
+        {mainGroupFilter === 'MC' && (
+          <div className="p-2.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex items-center gap-2 overflow-x-auto animate-in fade-in slide-in-from-top-1 duration-200">
+            <span className="text-xs font-black uppercase text-indigo-700 dark:text-indigo-300 pl-1 shrink-0">
+              Phân loại trắc nghiệm:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setMcSubFilter('MC_ALL')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+                mcSubFilter === 'MC_ALL'
+                  ? "bg-indigo-600 text-white shadow-2xs"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700"
+              )}
+            >
+              <span>Tất cả trắc nghiệm</span>
+              <span className="text-[10px] opacity-80">({questionCounts.mcTotal})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMcSubFilter('MC_SCENARIO')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+                mcSubFilter === 'MC_SCENARIO'
+                  ? "bg-cyan-600 text-white shadow-2xs"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700"
+              )}
+            >
+              <span>Trắc nghiệm tình huống</span>
+              <span className="text-[10px] opacity-80">({questionCounts.scenario})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMcSubFilter('MC_CHOICE')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+                mcSubFilter === 'MC_CHOICE'
+                  ? "bg-purple-600 text-white shadow-2xs"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700"
+              )}
+            >
+              <span>Trắc nghiệm chọn A B C D</span>
+              <span className="text-[10px] opacity-80">({questionCounts.choice})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMcSubFilter('MC_FILL')}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap",
+                mcSubFilter === 'MC_FILL'
+                  ? "bg-amber-600 text-white shadow-2xs"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 border border-slate-200 dark:border-slate-700"
+              )}
+            >
+              <span>Trắc nghiệm điền từ</span>
+              <span className="text-[10px] opacity-80">({questionCounts.fill})</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Nội dung danh sách câu hỏi */}
@@ -590,25 +801,15 @@ export function QuestionBankPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {(() => {
-            const displayedQuestions = questions.filter(q => {
-              const hasOptions = !!(q.options && q.options.length >= 2)
-              if (typeFilter === 'MC_CHOICE') return hasOptions
-              if (typeFilter === 'MC_FILL') return !hasOptions
-              return true
-            })
-
-            if (displayedQuestions.length === 0) {
-              return (
-                <div className="p-12 text-center text-xs text-slate-400 italic rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-                  Không có câu hỏi nào thuộc phân loại đã chọn.
-                </div>
-              )
-            }
-
-            return displayedQuestions.map((q, idx) => {
-              const hasOptions = !!(q.options && q.options.length >= 2)
-              const isMC = q.questionType === 'MC'
+          {displayedQuestions.length === 0 ? (
+            <div className="p-12 text-center text-xs text-slate-400 italic rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+              Không có câu hỏi nào thuộc phân loại đã chọn.
+            </div>
+          ) : (
+            displayedQuestions.map((q, idx) => {
+              const qType = classifyQuestion(q)
+              const typeInfo = QUESTION_CLASSIFICATION_LIST.find(t => t.key === qType)
+              const isMC = qType !== 'ESSAY'
               const itemNumber = (pageInfo.page - 1) * pageInfo.limit + idx + 1
 
               return (
@@ -623,18 +824,12 @@ export function QuestionBankPage() {
                         #{itemNumber}
                       </span>
 
-                      {/* Huy hiệu loại câu hỏi rõ ràng */}
-                      {hasOptions ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
-                          Trắc nghiệm chọn A B C D
-                        </span>
-                      ) : isMC || q.questionType === 'ESSAY' ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-                          {q.sampleEssay ? 'Tự luận (Có bài mẫu)' : 'Trắc nghiệm điền đáp án'}
-                        </span>
-                      ) : null}
+                      {/* Huy hiệu loại câu hỏi từ danh mục chuẩn */}
+                      <span className={cn("text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border shadow-2xs", typeInfo?.badgeClass)}>
+                        {typeInfo?.badgeLabel || 'Trắc nghiệm'}
+                      </span>
 
-                    {q.isDraft ? (
+                    {(q.isDraft ?? (q as any).draft) ? (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                         Bản nháp (Draft)
                       </span>
@@ -654,7 +849,7 @@ export function QuestionBankPage() {
 
                   {/* Nút hành động cho câu hỏi */}
                   <div className="flex items-center gap-1.5">
-                    {q.isDraft && (
+                    {(q.isDraft ?? (q as any).draft) && (
                       <button
                         type="button"
                         onClick={() => handlePublish(q)}
@@ -794,7 +989,7 @@ export function QuestionBankPage() {
               </div>
             )
             })
-          })()}
+          )}
 
           {/* Phân trang */}
           {pageInfo.totalPages > 1 && (

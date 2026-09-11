@@ -1,23 +1,23 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
-  Clock,
   HelpCircle,
   Users,
   ArrowRight,
   Plus,
   Search,
-  FileText,
   ShieldCheck,
   CheckCircle2,
   Hash,
   Layers,
-  FileUp,
   Loader2,
   RefreshCw,
   Edit3,
   Trash2,
-  X
+  X,
+  Filter,
+  RotateCcw,
+  ChevronDown
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn, cleanQuestionText } from '@/lib/utils'
@@ -25,11 +25,17 @@ import type { ExamRoom, CandidateVerification, MultipleChoiceQuestion } from '@/
 import { CreateRoomModal } from '@/features/exams/components/CreateRoomModal'
 import { CandidateVerificationModal, saveCandidateProfile } from '@/features/exams/components/CandidateVerificationModal'
 import { ExamImportReviewModal } from '@/features/exams/components/ExamImportReviewModal'
+import {
+  RealisticClock3DIcon,
+  RealisticQuiz3DIcon,
+  RealisticEssay3DIcon
+} from '@/components/common/RealisticExamIcons'
 import { examApi } from '@/services/examApi'
 import { toast } from 'sonner'
 
 export function ExamPage() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Danh sách phòng thi (Dữ liệu thật 100% từ Database qua Spring Boot)
   const [examRooms, setExamRooms] = useState<ExamRoom[]>([])
@@ -38,13 +44,28 @@ export function ExamPage() {
   // Trạng thái tìm kiếm & lọc
   const [searchQuery, setSearchQuery] = useState('')
   const [quickRoomCode, setQuickRoomCode] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN' | 'UPCOMING'>('ALL')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'OPEN'>('ALL')
+  const [durationFilter, setDurationFilter] = useState<'ALL' | number>('ALL')
 
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [selectedRoomForVerify, setSelectedRoomForVerify] = useState<ExamRoom | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // Nhận diện action và filter từ Dropdown Menu Sidebar
+  useEffect(() => {
+    if (!location.search) return
+    const params = new URLSearchParams(location.search)
+    const action = params.get('action')
+    if (action === 'create') {
+      setIsCreateModalOpen(true)
+    }
+    const filter = params.get('filter')
+    if (filter === 'standard') {
+      setSearchQuery('Chuẩn đầu ra')
+    }
+  }, [location.search])
 
   // State chỉnh sửa phòng thi (Edit Room Modal)
   const [editingRoom, setEditingRoom] = useState<ExamRoom | null>(null)
@@ -280,7 +301,10 @@ export function ExamPage() {
     }
   }
 
-  // Lọc danh sách phòng thi an toàn
+  // Số lượng phòng thi đang mở
+  const openRoomsCount = examRooms.filter(r => r.status === 'OPEN').length
+
+  // Lọc danh sách phòng thi an toàn & linh hoạt
   const filteredRooms = examRooms.filter(room => {
     if (!room) return false
     const title = (room.title || '').toLowerCase()
@@ -289,9 +313,10 @@ export function ExamPage() {
     const q = searchQuery.trim().toLowerCase()
 
     const matchesSearch = !q || title.includes(q) || code.includes(q) || desc.includes(q)
-    const matchesStatus = statusFilter === 'ALL' || room.status === statusFilter
+    const matchesStatus = statusFilter === 'ALL' || room.status === 'OPEN'
+    const matchesDuration = durationFilter === 'ALL' || Number(room.durationMinutes) === Number(durationFilter)
 
-    return matchesSearch && matchesStatus
+    return matchesSearch && matchesStatus && matchesDuration
   })
 
   // Thống kê nhanh
@@ -338,16 +363,8 @@ export function ExamPage() {
             </p>
           </div>
 
-          {/* Nút Tạo phòng thi & Import PDF */}
+          {/* Nút Tạo phòng thi */}
           <div className="flex flex-wrap items-center gap-3 self-start lg:self-auto shrink-0">
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200/80 dark:border-indigo-800/80 bg-white/90 dark:bg-slate-900/90 text-indigo-700 dark:text-indigo-300 text-xs font-bold shadow-xs hover:border-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/40 transition-all cursor-pointer"
-            >
-              <FileUp className="h-4 w-4 stroke-[2.2] text-indigo-600 dark:text-indigo-400" />
-              <span>Import Đề Thi PDF (Bản Nháp)</span>
-            </button>
-
             <button
               onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all transform hover:-translate-y-0.5 cursor-pointer"
@@ -419,57 +436,148 @@ export function ExamPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. BỘ LỌC VÀ TÌM KIẾM PHÒNG THI                                           */}
+      {/* 3. BỘ LỌC VÀ TÌM KIẾM PHÒNG THI HIỆN ĐẠI (ĐÃ BỎ "SẮP TỚI", THIẾT KẾ MỚI)   */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-        {/* Ô tìm kiếm */}
-        <div className="relative w-full sm:w-80">
-          <Search className="h-4 w-4 stroke-[2] absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên đề hoặc mã phòng..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-[#111622] border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400 transition-all text-slate-900 dark:text-white"
-          />
+      <div className="space-y-3 pt-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          
+          {/* Cụm 1: Ô tìm kiếm thông minh */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="h-4 w-4 stroke-[2.2] absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-500" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên đề, mã phòng, mô tả..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-9 py-2.5 text-xs rounded-xl bg-white dark:bg-[#111622] border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600/30 focus:border-indigo-500 transition-all text-slate-900 dark:text-white shadow-2xs placeholder:text-slate-400 font-medium"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded cursor-pointer"
+                title="Xóa tìm kiếm"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Cụm 2: Bộ lọc trạng thái & Tùy chọn thời lượng / sắp xếp */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            
+            {/* Tabs Trạng thái: Chỉ gồm "Tất cả" & "Đang mở" (Đã xóa "Sắp tới") */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('ALL')}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                  statusFilter === 'ALL'
+                    ? "bg-indigo-600 text-white shadow-sm scale-[1.02]"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                )}
+              >
+                <span>Tất cả</span>
+                <span className={cn(
+                  "text-[10px] font-black px-1.5 py-0.2 rounded-full",
+                  statusFilter === 'ALL'
+                    ? "bg-white/25 text-white"
+                    : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                )}>
+                  {examRooms.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('OPEN')}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                  statusFilter === 'OPEN'
+                    ? "bg-emerald-600 text-white shadow-sm scale-[1.02]"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                )}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span>Đang mở</span>
+                <span className={cn(
+                  "text-[10px] font-black px-1.5 py-0.2 rounded-full",
+                  statusFilter === 'OPEN'
+                    ? "bg-white/25 text-white"
+                    : "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+                )}>
+                  {openRoomsCount}
+                </span>
+              </button>
+            </div>
+
+            {/* Lọc theo thời lượng thi */}
+            <div className="relative">
+              <select
+                value={durationFilter}
+                onChange={(e) => setDurationFilter(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+                className="pl-3 pr-7 py-2 text-xs font-bold rounded-xl bg-white dark:bg-[#111622] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600/30 shadow-2xs cursor-pointer appearance-none"
+              >
+                <option value="ALL">⏱ Tất cả thời lượng</option>
+                <option value={30}>⏱ 30 phút</option>
+                <option value={45}>⏱ 45 phút</option>
+                <option value={60}>⏱ 60 phút</option>
+                <option value={90}>⏱ 90 phút</option>
+                <option value={120}>⏱ 120 phút</option>
+                <option value={150}>⏱ 150 phút (Chuẩn CAND)</option>
+              </select>
+              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                <ChevronDown className="h-3 w-3" />
+              </div>
+            </div>
+
+            {/* Nút đặt lại bộ lọc nếu có lọc đang kích hoạt */}
+            {(searchQuery || statusFilter !== 'ALL' || durationFilter !== 'ALL') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('')
+                  setStatusFilter('ALL')
+                  setDurationFilter('ALL')
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
+                title="Xóa tất cả bộ lọc"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Đặt lại</span>
+              </button>
+            )}
+
+          </div>
+
         </div>
 
-        {/* Filter status buttons */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 self-start sm:self-auto">
-          <button
-            onClick={() => setStatusFilter('ALL')}
-            className={cn(
-              "px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
-              statusFilter === 'ALL'
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            Tất cả ({examRooms.length})
-          </button>
-          <button
-            onClick={() => setStatusFilter('OPEN')}
-            className={cn(
-              "px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
-              statusFilter === 'OPEN'
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            Đang mở
-          </button>
-          <button
-            onClick={() => setStatusFilter('UPCOMING')}
-            className={cn(
-              "px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer",
-              statusFilter === 'UPCOMING'
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-            )}
-          >
-            Sắp tới
-          </button>
-        </div>
+        {/* Dòng kết quả bộ lọc thông minh nếu đang tìm kiếm hoặc chọn lọc */}
+        {(searchQuery || statusFilter !== 'ALL' || durationFilter !== 'ALL') && (
+          <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 animate-in fade-in">
+            <div className="flex items-center gap-2 font-medium">
+              <Filter className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>
+                Tìm thấy <strong>{filteredRooms.length}</strong> phòng thi phù hợp
+                {searchQuery ? ` với từ khóa "${searchQuery}"` : ''}
+                {statusFilter === 'OPEN' ? ' (Đang mở)' : ''}
+                {durationFilter !== 'ALL' ? ` (${durationFilter} phút)` : ''}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('')
+                setStatusFilter('ALL')
+                setDurationFilter('ALL')
+              }}
+              className="font-bold underline text-indigo-600 dark:text-indigo-300 hover:text-indigo-800 cursor-pointer text-xs ml-2 shrink-0"
+            >
+              Hiển thị tất cả
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -485,131 +593,167 @@ export function ExamPage() {
           <HelpCircle className="h-10 w-10 text-slate-400 mx-auto" />
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Không tìm thấy phòng thi nào</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Chưa có phòng thi phù hợp với bộ lọc hoặc từ khóa tìm kiếm. Bạn có thể bấm "Tạo Phòng Thi Mới" hoặc "Import Đề Thi PDF (Bản Nháp)" ở trên.
+            Chưa có phòng thi phù hợp với bộ lọc hoặc từ khóa tìm kiếm. Bạn có thể bấm "Tạo Phòng Thi Mới" ở trên.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredRooms.map((room) => (
-            <div
-              key={room.id}
-              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111622] p-5 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-800/80 transition-all duration-200 shadow-xs hover:shadow-md group"
-            >
-              <div className="space-y-3.5">
-                
-                {/* Header card: Mã phòng thi, Trạng thái & Action Buttons SỬA / XÓA */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80">
-                    Mã: {room.code}
-                  </span>
+          {filteredRooms.map((room, idx) => {
+            const roomGradientThemes = [
+              'from-blue-600 via-indigo-600 to-cyan-500',
+              'from-indigo-600 via-purple-600 to-pink-500',
+              'from-purple-600 via-fuchsia-600 to-pink-500',
+              'from-emerald-600 via-teal-600 to-cyan-500',
+              'from-amber-500 via-orange-500 to-red-500',
+            ]
+            const gradientTheme = roomGradientThemes[idx % roomGradientThemes.length]
 
-                  <div className="flex items-center gap-1.5">
-                    <span className={cn(
-                      "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border flex items-center gap-1",
-                      room.status === 'OPEN'
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80"
-                        : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/80"
-                    )}>
-                      {room.status === 'OPEN' && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      )}
-                      {room.status === 'OPEN' ? 'Mở' : 'Sắp tới'}
-                    </span>
+            return (
+              <div
+                key={room.id}
+                className="group rounded-2xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between p-5 shadow-2xs hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-[#111622] border-slate-200/90 dark:border-slate-800 hover:border-indigo-400/80 dark:hover:border-indigo-500/80"
+              >
+                {/* Dải màu sắc pha vào nhau mỏng thôi (h-1) đồng bộ giống khung bài học thư viện tài liệu */}
+                <div className={cn(
+                  "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r transition-all duration-300 opacity-70 group-hover:opacity-100",
+                  gradientTheme
+                )} />
 
-                    {/* Nút Sửa Phòng Thi */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditRoom(room)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
-                      title="Sửa thông tin phòng thi"
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                    </button>
-
-                    {/* Nút Xóa Phòng Thi */}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteRoom(room)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
-                      title="Xóa phòng thi"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Tên phòng thi */}
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 leading-snug transition-colors">
-                    {room.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
-                    {room.description}
-                  </p>
-                </div>
-
-                {/* THÔNG SỐ ĐỀ THI: CẤU TRÚC 2 PHẦN TỰ LUẬN + TRẮC NGHIỆM & THỜI GIAN */}
-                <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 grid grid-cols-3 gap-2 text-center">
+                <div className="space-y-3.5">
                   
-                  {/* Thời gian */}
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Thời gian</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                      <Clock className="h-3 w-3 text-amber-500 stroke-[2.2]" />
-                      <span>{room.durationMinutes}p</span>
+                  {/* Header card: Mã phòng thi, Trạng thái & Action Buttons SỬA / XÓA */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80">
+                      Mã: {room.code}
                     </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border flex items-center gap-1",
+                        room.status === 'OPEN'
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80"
+                          : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/80"
+                      )}>
+                        {room.status === 'OPEN' && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        )}
+                        {room.status === 'OPEN' ? 'Mở' : 'Sắp tới'}
+                      </span>
+
+                      {/* Nút Sửa Phòng Thi */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditRoom(room)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 transition-colors cursor-pointer"
+                        title="Sửa thông tin phòng thi"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* Nút Xóa Phòng Thi */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRoom(room)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        title="Xóa phòng thi"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Trắc nghiệm */}
-                  <div className="space-y-0.5 border-x border-slate-200 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Trắc nghiệm</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                      <HelpCircle className="h-3 w-3 text-indigo-500 stroke-[2.2]" />
-                      <span>{room.partsSummary?.mcCount ?? (room.multipleChoiceQuestions?.length || 0)} câu</span>
-                    </span>
+                  {/* Tên phòng thi + Logo Trường Đại học Cảnh sát Nhân dân (T05) */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src="/t05-logo.png"
+                      alt="Trường Đại học Cảnh sát Nhân dân"
+                      className="h-8 w-8 object-contain shrink-0 mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 leading-snug transition-colors line-clamp-2">
+                        {room.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                        {room.description || 'Đề thi sát hạch lý thuyết trắc nghiệm và bài văn nghị luận tư tưởng nghiệp vụ CAND.'}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Tự luận */}
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Tự luận</span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1">
-                      <FileText className="h-3 w-3 text-emerald-500 stroke-[2.2]" />
-                      <span>{room.partsSummary?.essayCount ?? (room.essayQuestions?.length || 0)} câu</span>
-                    </span>
+                  {/* THÔNG SỐ ĐỀ THI: THỜI GIAN • TRẮC NGHIỆM • TỰ LUẬN (NHỎ GỌN, XÓA BỎ KHUNG BAO BỌC) */}
+                  <div className="grid grid-cols-3 gap-2 pt-0.5">
+                    
+                    {/* Khung Thời gian */}
+                    <div className="py-1.5 px-1 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 shadow-2xs flex flex-col items-center justify-center text-center hover:border-amber-300 dark:hover:border-amber-700 transition-colors">
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
+                        Thời gian
+                      </span>
+                      <div className="flex items-center justify-center gap-1 mt-0.5 font-mono">
+                        <RealisticClock3DIcon size={13.5} />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
+                          {room.durationMinutes}p
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Khung Trắc nghiệm */}
+                    <div className="py-1.5 px-1 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/50 shadow-2xs flex flex-col items-center justify-center text-center hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 block">
+                        Trắc nghiệm
+                      </span>
+                      <div className="flex items-center justify-center gap-1 mt-0.5 font-mono">
+                        <RealisticQuiz3DIcon size={13.5} />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
+                          {room.partsSummary?.mcCount ?? (room.multipleChoiceQuestions?.length || 0)} câu
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Khung Tự luận */}
+                    <div className="py-1.5 px-1 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 shadow-2xs flex flex-col items-center justify-center text-center hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
+                      <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block">
+                        Tự luận
+                      </span>
+                      <div className="flex items-center justify-center gap-1 mt-0.5 font-mono">
+                        <RealisticEssay3DIcon size={13.5} />
+                        <span className="text-xs font-black text-slate-900 dark:text-white">
+                          {room.partsSummary?.essayCount ?? (room.essayQuestions?.length || 0)} câu
+                        </span>
+                      </div>
+                    </div>
+
                   </div>
 
                 </div>
 
+                {/* Footer card: Thông tin chuẩn Bộ Công An & Nút Vào Phòng Thi */}
+                <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                  <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 stroke-[2.2] shrink-0" />
+                    <span>Bộ Công An</span>
+                  </div>
+
+                  <button
+                    onClick={() => handleEnterRoom(room)}
+                    disabled={isCheckingRoomId === room.id}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow-md hover:shadow-indigo-600/20 transition-all cursor-pointer disabled:opacity-60"
+                  >
+                    {isCheckingRoomId === room.id ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        <span>Kiểm tra...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Vào Thi</span>
+                        <ArrowRight className="h-3.5 w-3.5 stroke-[2]" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
               </div>
-
-              {/* Footer card: Số thí sinh đã tham gia & Nút Vào Phòng Thi */}
-              <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-medium">
-                  <Users className="h-3.5 w-3.5 stroke-[2] text-slate-400" />
-                  <span>{room.totalAttempts} thí sinh</span>
-                </span>
-
-                <button
-                  onClick={() => handleEnterRoom(room)}
-                  disabled={isCheckingRoomId === room.id}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs hover:shadow-md hover:shadow-indigo-600/20 transition-all cursor-pointer disabled:opacity-60"
-                >
-                  {isCheckingRoomId === room.id ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Kiểm tra...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Vào Thi</span>
-                      <ArrowRight className="h-3.5 w-3.5 stroke-[2]" />
-                    </>
-                  )}
-                </button>
-              </div>
-
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

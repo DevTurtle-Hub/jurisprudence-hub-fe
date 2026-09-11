@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -15,8 +15,9 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Bell,
-  Plus
+  Plus,
+  Sparkles,
+  Flame
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -34,11 +35,53 @@ export const PoliceLogo = ({ className }: { className?: string }) => (
   />
 )
 
-interface NavItem {
+export interface NavItem {
+  id: string
   name: string
   path: string
   icon: any
-  badge?: string
+  badgeType?: 'ai' | 'hot'
+  adminOnly?: boolean
+  theme: {
+    activeBg: string
+    activeBorder: string
+    activeText: string
+    iconGradient: string
+    indicatorGradient: string
+    hoverText: string
+    hoverIconBg: string
+  }
+}
+
+// Component Badge / Nút bấm mini pha màu đa sắc cho AI và HOT
+const RenderNavBadge = ({ badgeType }: { badgeType?: 'ai' | 'hot' }) => {
+  if (!badgeType) return null
+
+  if (badgeType === 'ai') {
+    return (
+      <span
+        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider text-white bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 shadow-[0_2px_10px_rgba(168,85,247,0.4)] border border-white/30 shrink-0 group-hover:scale-105 group-hover:shadow-[0_2px_14px_rgba(168,85,247,0.6)] transition-all duration-200 select-none cursor-pointer"
+        title="Luyện Đề Thông Minh Tích Hợp AI"
+      >
+        <Sparkles className="h-3 w-3 text-amber-200 fill-amber-200/50 animate-pulse" />
+        <span className="leading-none">AI</span>
+      </span>
+    )
+  }
+
+  if (badgeType === 'hot') {
+    return (
+      <span
+        className="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-[9.5px] font-black tracking-wider text-white bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 shadow-[0_2px_10px_rgba(239,68,68,0.4)] border border-white/30 shrink-0 group-hover:scale-105 group-hover:shadow-[0_2px_14px_rgba(239,68,68,0.6)] transition-all duration-200 select-none cursor-pointer"
+        title="Thư Viện Tài Liệu Nổi Bật HOT"
+      >
+        <Flame className="h-3 w-3 text-amber-200 fill-amber-200 animate-pulse" />
+        <span className="leading-none">HOT</span>
+      </span>
+    )
+  }
+
+  return null
 }
 
 export function RootLayout() {
@@ -60,16 +103,15 @@ export function RootLayout() {
     return localStorage.getItem('sidebar_collapsed') === 'true'
   })
 
-  // Quản lý Dark Mode (Mặc định Light Mode theo đúng ảnh mẫu)
+  // Quản lý mở đóng Mobile Drawer
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false)
+
+  // Quản lý Dark Mode (Mặc định Light Mode)
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme')
     if (saved) return saved === 'dark'
-    return false // Mặc định sáng mịn màng theo ảnh mẫu
+    return false
   })
-
-  // Quản lý dropdown Thông báo
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(3)
 
   useEffect(() => {
     if (isDark) {
@@ -96,43 +138,107 @@ export function RootLayout() {
   // Kiểm tra quyền Admin
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.email === 'admin@gmail.com'
 
-  // Danh mục menu phù hợp với nền tảng pháp luật & sát hạch CA4
-  // Theo yêu cầu: Ngân hàng câu hỏi chỉ có admin mới được phép xem và thêm
-  const allMenuItems: (NavItem & { adminOnly?: boolean })[] = [
-    { name: 'Tổng quan', path: '/', icon: LayoutDashboard },
-    { name: 'Thư viện Tài liệu', path: '/documents', icon: FileText, badge: 'Mới' },
-    { name: 'Phòng Thi Thử', path: '/exams', icon: GraduationCap },
-    { name: 'Luyện Đề Thông Minh', path: '/quiz', icon: ClipboardList },
-    { name: 'Ngân Hàng Câu Hỏi', path: '/question-bank', icon: Layers, adminOnly: true },
-    { name: 'Cài Đặt Hệ Thống', path: '/settings', icon: Settings },
-  ]
-
-  const menuItems = allMenuItems.filter(item => !item.adminOnly || isAdmin)
-
-  // Danh sách thông báo học tập & thi cử CAND chính thức
-  const notifications = [
+  // Cấu hình menu điều hướng thanh lịch (Giao diện phẳng UI Cũ, Màu sắc đa sắc độc bản cho từng trang)
+  const navItems: NavItem[] = useMemo(() => [
     {
-      id: 1,
-      title: 'Phòng thi CAND-9466 đã mở',
-      desc: 'Kỳ thi sát hạch CA4 Văn bằng 2 CAND gồm 60 câu trắc nghiệm và 01 bài tự luận chính thức.',
-      time: '10 phút trước',
-      isNew: true
+      id: 'dashboard',
+      name: 'Tổng quan',
+      path: '/',
+      icon: LayoutDashboard,
+      theme: {
+        activeBg: 'bg-gradient-to-r from-blue-600/18 via-indigo-600/12 to-cyan-500/15 dark:from-blue-500/25 dark:via-indigo-500/18 dark:to-cyan-500/15',
+        activeBorder: 'border-blue-500/40 dark:border-blue-400/40',
+        activeText: 'text-blue-700 dark:text-blue-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-md shadow-blue-500/25',
+        indicatorGradient: 'bg-gradient-to-b from-blue-500 via-indigo-500 to-cyan-400 shadow-[0_0_12px_rgba(59,130,246,0.8)]',
+        hoverText: 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+        hoverIconBg: 'group-hover:bg-blue-50 dark:group-hover:bg-blue-950/40 group-hover:text-blue-600'
+      }
     },
     {
-      id: 2,
-      title: 'Giáo trình Lý luận CAND (Chuẩn T05)',
-      desc: 'Đã cập nhật toàn diện 28 bài học CAND với 8 khối kiến thức trọng tâm và sơ đồ tư duy.',
-      time: '1 giờ trước',
-      isNew: true
+      id: 'documents',
+      name: 'Thư viện Tài liệu',
+      path: '/documents',
+      icon: FileText,
+      badgeType: 'hot',
+      theme: {
+        activeBg: 'bg-gradient-to-r from-emerald-600/18 via-teal-600/12 to-green-500/15 dark:from-emerald-500/25 dark:via-teal-500/18 dark:to-green-500/15',
+        activeBorder: 'border-emerald-500/40 dark:border-emerald-400/40',
+        activeText: 'text-emerald-700 dark:text-emerald-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-md shadow-emerald-500/25',
+        indicatorGradient: 'bg-gradient-to-b from-emerald-500 via-teal-500 to-green-400 shadow-[0_0_12px_rgba(16,185,129,0.8)]',
+        hoverText: 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400',
+        hoverIconBg: 'group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/40 group-hover:text-emerald-600'
+      }
     },
     {
-      id: 3,
-      title: 'Nghị quyết số 66-NQ/TW & Hiến pháp 2025',
-      desc: 'Cập nhật trọng tâm ôn tập về xây dựng và hoàn thiện Nhà nước pháp quyền XHCN Việt Nam.',
-      time: '3 giờ trước',
-      isNew: false
+      id: 'quiz',
+      name: 'Luyện Đề Thông Minh',
+      path: '/quiz',
+      icon: ClipboardList,
+      badgeType: 'ai',
+      theme: {
+        activeBg: 'bg-gradient-to-r from-amber-500/20 via-orange-500/14 to-rose-500/15 dark:from-amber-500/30 dark:via-orange-500/20 dark:to-rose-500/15',
+        activeBorder: 'border-amber-500/45 dark:border-amber-400/45',
+        activeText: 'text-amber-800 dark:text-amber-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-amber-500 via-orange-500 to-rose-600 text-white shadow-md shadow-orange-500/25',
+        indicatorGradient: 'bg-gradient-to-b from-amber-400 via-orange-500 to-rose-500 shadow-[0_0_12px_rgba(245,158,11,0.8)]',
+        hoverText: 'group-hover:text-amber-600 dark:group-hover:text-amber-400',
+        hoverIconBg: 'group-hover:bg-amber-50 dark:group-hover:bg-amber-950/40 group-hover:text-amber-600'
+      }
+    },
+    {
+      id: 'exams',
+      name: 'Phòng Thi Thử',
+      path: '/exams',
+      icon: GraduationCap,
+      theme: {
+        activeBg: 'bg-gradient-to-r from-red-600/18 via-rose-600/12 to-red-800/15 dark:from-red-500/25 dark:via-rose-500/18 dark:to-red-800/15',
+        activeBorder: 'border-red-500/40 dark:border-red-400/40',
+        activeText: 'text-red-700 dark:text-red-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-red-600 via-rose-600 to-red-800 text-white shadow-md shadow-red-500/25',
+        indicatorGradient: 'bg-gradient-to-b from-red-500 via-rose-600 to-purple-600 shadow-[0_0_12px_rgba(239,68,68,0.8)]',
+        hoverText: 'group-hover:text-red-600 dark:group-hover:text-red-400',
+        hoverIconBg: 'group-hover:bg-red-50 dark:group-hover:bg-red-950/40 group-hover:text-red-600'
+      }
+    },
+    {
+      id: 'question-bank',
+      name: 'Ngân Hàng Câu Hỏi',
+      path: '/question-bank',
+      icon: Layers,
+      adminOnly: true,
+      theme: {
+        activeBg: 'bg-gradient-to-r from-purple-600/18 via-fuchsia-600/12 to-indigo-600/15 dark:from-purple-500/25 dark:via-fuchsia-500/18 dark:to-indigo-600/15',
+        activeBorder: 'border-purple-500/40 dark:border-purple-400/40',
+        activeText: 'text-purple-700 dark:text-purple-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-purple-600 via-fuchsia-600 to-indigo-700 text-white shadow-md shadow-purple-500/25',
+        indicatorGradient: 'bg-gradient-to-b from-purple-500 via-fuchsia-500 to-pink-500 shadow-[0_0_12px_rgba(168,85,247,0.8)]',
+        hoverText: 'group-hover:text-purple-600 dark:group-hover:text-purple-400',
+        hoverIconBg: 'group-hover:bg-purple-50 dark:group-hover:bg-purple-950/40 group-hover:text-purple-600'
+      }
+    },
+    {
+      id: 'settings',
+      name: 'Cài Đặt Hệ Thống',
+      path: '/settings',
+      icon: Settings,
+      theme: {
+        activeBg: 'bg-gradient-to-r from-slate-600/18 via-cyan-600/14 to-slate-700/15 dark:from-slate-500/25 dark:via-cyan-500/18 dark:to-slate-700/15',
+        activeBorder: 'border-cyan-600/40 dark:border-cyan-400/40',
+        activeText: 'text-slate-800 dark:text-cyan-300 font-bold',
+        iconGradient: 'bg-gradient-to-br from-slate-600 via-cyan-700 to-slate-800 text-white shadow-md shadow-cyan-600/25',
+        indicatorGradient: 'bg-gradient-to-b from-slate-400 via-cyan-500 to-indigo-500 shadow-[0_0_12px_rgba(6,182,212,0.8)]',
+        hoverText: 'group-hover:text-slate-700 dark:group-hover:text-cyan-400',
+        hoverIconBg: 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800/60 group-hover:text-slate-700'
+      }
     }
-  ]
+  ], [])
+
+  // Lọc quyền Admin
+  const filteredNavItems = useMemo(() => {
+    return navItems.filter(item => !item.adminOnly || isAdmin)
+  }, [navItems, isAdmin])
 
   // Tự động ẩn Sidebar và mở rộng màn hình khi vào nội dung chi tiết bài học, khi làm bài thi, hoặc khi luyện đề thông minh
   const isStudyMode = location.pathname.startsWith('/documents/') && location.pathname !== '/documents'
@@ -150,18 +256,18 @@ export function RootLayout() {
     )}>
       
       {/* ========================================================================= */}
-      {/* 1. SIDEBAR CHO DESKTOP (Ẩn khi vào chế độ đọc bài học, phòng thi, hoặc luyện đề) */}
+      {/* 1. SIDEBAR CHO DESKTOP PHÂN TẦNG HIỆN ĐẠI (ĐA SẮC THEO TỪNG TRANG)       */}
       {/* ========================================================================= */}
       {!isStudyMode && !isExamTakingMode && !isQuizMode && (
         <aside 
           className={cn(
-            "hidden md:flex flex-col h-screen sticky top-0 shrink-0 z-30 transition-all duration-300 ease-in-out bg-white dark:bg-[#111622] border-r border-slate-200/80 dark:border-slate-800 shadow-[2px_0_12px_rgba(0,0,0,0.02)]",
+            "hidden md:flex flex-col h-screen sticky top-0 shrink-0 z-30 transition-all duration-300 ease-in-out bg-white/95 dark:bg-[#0f1420]/95 backdrop-blur-md border-r border-slate-200/90 dark:border-slate-800/90 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
             isCollapsed ? "w-20" : "w-72"
           )}
         >
-        {/* Sidebar Header: Logo + Tên Brand + Nút Toggle Icon Hiện Đại */}
+        {/* TẦNG 0: HEADER THƯƠNG HIỆU & NÚT TOGGLE */}
         <div className={cn(
-          "border-b border-slate-100 dark:border-slate-800/80 transition-all duration-300",
+          "border-b border-slate-100 dark:border-slate-800/80 transition-all duration-300 bg-gradient-to-b from-slate-50/70 to-transparent dark:from-slate-900/50",
           isCollapsed 
             ? "py-4 px-2 flex flex-col items-center justify-center gap-2.5" 
             : "p-4 flex items-center justify-between gap-3"
@@ -173,32 +279,39 @@ export function RootLayout() {
               "flex items-center cursor-pointer select-none group min-w-0",
               isCollapsed ? "justify-center" : "gap-3 flex-1"
             )}
-            title="Jurisprudence Hub - CA4"
+            title="Jurisprudence Hub - T05"
           >
             <div className="relative shrink-0">
-              <PoliceLogo className="h-10 w-10 shrink-0 transition-transform duration-300 group-hover:scale-105" />
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#111622]" />
+              <div className="p-1 rounded-xl bg-gradient-to-br from-emerald-500/15 via-amber-500/10 to-red-500/15 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+                <PoliceLogo className="h-8 w-8 shrink-0 object-contain drop-shadow-xs" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#111622] animate-pulse" />
             </div>
 
-            {/* Chỉ hiển thị text khi mở rộng, ẩn hoàn toàn khi thu gọn */}
+            {/* Chỉ hiển thị text khi mở rộng */}
             {!isCollapsed && (
               <div className="flex flex-col min-w-0 leading-tight">
-                <span className="font-black text-[15px] tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
-                  Jurisprudence Hub
-                </span>
-                <span className="text-[10px] font-black text-red-600 dark:text-red-400 tracking-wider uppercase whitespace-nowrap mt-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-[14px] tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+                    JURISPRUDENCE
+                  </span>
+                  <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800 shadow-2xs">
+                    HUB
+                  </span>
+                </div>
+                <span className="text-[9.5px] font-bold text-red-600 dark:text-red-400 tracking-wider uppercase whitespace-nowrap mt-0.5">
                   T05 • ĐH CẢNH SÁT NHÂN DÂN
                 </span>
               </div>
             )}
           </div>
 
-          {/* Nút Toggle: Chỉ giữ lại ICON, không có chữ Collapse */}
+          {/* Nút Toggle: Nút thu gọn / mở rộng hiện đại */}
           <button
             onClick={toggleSidebar}
             title={isCollapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"}
             className={cn(
-              "rounded-xl flex items-center justify-center text-slate-400 hover:text-[#5d5fef] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 transition-all duration-200 cursor-pointer shrink-0 shadow-2xs",
+              "rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-slate-200/80 dark:border-slate-700/80 transition-all duration-200 cursor-pointer shrink-0 shadow-2xs active:scale-95",
               isCollapsed ? "h-7 w-7" : "h-8 w-8"
             )}
           >
@@ -210,91 +323,96 @@ export function RootLayout() {
           </button>
         </div>
 
-        {/* Danh sách Menu Items */}
-        <div className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
-          <div>
-            {!isCollapsed && (
-              <div className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase px-3 mb-2">
-                Menu
-              </div>
-            )}
+        {/* DANH SÁCH MENU ĐIỀU HƯỚNG CHÍNH (UI CŨ: PHẲNG, GỌN GÀNG, MÀU SẮC ĐA SẮC ĐỘC BẢN) */}
+        <nav className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+          {filteredNavItems.map((item) => {
+            const Icon = item.icon
+            const isActive = item.path === '/' 
+              ? location.pathname === '/' 
+              : location.pathname.startsWith(item.path)
+            const theme = item.theme
 
-            <nav className="space-y-1">
-              {menuItems.map((item) => {
-                const Icon = item.icon
-                const isActive = location.pathname === item.path
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.path}
-                    title={isCollapsed ? item.name : undefined}
+            return (
+              <div
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "flex items-center rounded-xl text-sm transition-all duration-200 group relative cursor-pointer select-none",
+                  isCollapsed 
+                    ? "justify-center h-11 w-11 mx-auto p-0" 
+                    : "gap-3 px-3.5 py-2.5",
+                  isActive
+                    ? cn(theme.activeBg, theme.activeBorder, theme.activeText, "border font-bold shadow-2xs")
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium hover:translate-x-0.5"
+                )}
+                title={isCollapsed ? item.name : undefined}
+              >
+                {/* Khối Icon với dải màu pha trộn đa sắc độc bản cho từng trang */}
+                <div className={cn(
+                  "p-2 rounded-xl transition-all duration-200 shrink-0",
+                  isActive 
+                    ? theme.iconGradient 
+                    : cn("text-slate-400 dark:text-slate-500", theme.hoverIconBg)
+                )}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                
+                {!isCollapsed && (
+                  <>
+                    <span className={cn(
+                      "truncate flex-1 font-semibold text-[13.5px] transition-colors",
+                      !isActive && theme.hoverText
+                    )}>
+                      {item.name}
+                    </span>
+
+                    <RenderNavBadge badgeType={item.badgeType} />
+                  </>
+                )}
+
+                {/* Hiệu ứng thanh active phát sáng màu pha trộn độc quyền bên mép trái */}
+                {isActive && (
+                  <motion.div
+                    layoutId="active-indicator"
                     className={cn(
-                      "flex items-center rounded-xl text-sm font-medium transition-all duration-200 group relative",
-                      isCollapsed 
-                        ? "justify-center h-10 w-10 mx-auto p-0" 
-                        : "gap-3 px-3.5 py-2.5",
-                      isActive
-                        ? "text-[#5d5fef] dark:text-[#8082ff] bg-[#f0effe] dark:bg-[#5d5fef]/15 font-semibold shadow-xs"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60"
+                      "absolute left-0 top-2 bottom-2 w-1 rounded-r-full",
+                      theme.indicatorGradient
                     )}
-                  >
-                    <Icon className={cn(
-                      "h-4.5 w-4.5 shrink-0 transition-colors",
-                      isActive ? "text-[#5d5fef] dark:text-[#8082ff]" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
-                    )} />
-                    
-                    {!isCollapsed && (
-                      <span className="truncate flex-1">{item.name}</span>
-                    )}
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </nav>
 
-                    {!isCollapsed && item.badge && (
-                      <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                        {item.badge}
-                      </span>
-                    )}
-
-                    {/* Hiệu ứng thanh active bên trái */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-indicator"
-                        className="absolute left-0 top-2 bottom-2 w-1 bg-[#5d5fef] rounded-r-full"
-                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                      />
-                    )}
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </div>
-        </div>
-
-        {/* Sidebar Footer: Đăng nhập hoặc Thẻ thông tin Học viên */}
-        <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0e131f]/50">
+        {/* TẦNG CUỐI: ĐĂNG NHẬP HOẶC THẺ SĨ QUAN / HỌC VIÊN CAO CẤP */}
+        <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-[#0c1019]/60">
           {!isLoggedIn ? (
             <button
               onClick={() => openAuthModal()}
               className={cn(
-                "w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600 via-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white font-extrabold text-xs shadow-md shadow-red-600/25 hover:shadow-lg transition-all cursor-pointer",
+                "w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-extrabold text-xs shadow-sm shadow-emerald-700/20 hover:shadow-md transition-all cursor-pointer active:scale-[0.98]",
                 isCollapsed ? "px-1.5" : ""
               )}
               title="Đăng nhập để vào tài liệu học thi"
             >
               <LogIn className="h-4 w-4 shrink-0" />
-              {!isCollapsed && <span>ĐĂNG NHẬP</span>}
+              {!isCollapsed && <span>ĐĂNG NHẬP HỆ THỐNG</span>}
             </button>
           ) : (
             <div className={cn(
-              "flex items-center rounded-xl p-2 transition-colors",
-              isCollapsed ? "justify-center" : "justify-between bg-white dark:bg-[#151b29] border border-slate-200/70 dark:border-slate-800 shadow-xs"
+              "flex items-center rounded-xl p-2 transition-all",
+              isCollapsed ? "justify-center" : "justify-between bg-white dark:bg-[#141a27] border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-emerald-500/40"
             )}>
               <div 
                 onClick={() => navigate('/settings')}
-                className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+                className="flex items-center gap-2.5 min-w-0 cursor-pointer group flex-1"
                 title="Cài đặt tài khoản"
               >
-                <div className="relative">
-                  <Avatar className="h-9 w-9 border border-red-500/30 ring-2 ring-red-500/10 shadow-xs">
-                    <AvatarFallback className="bg-gradient-to-br from-red-600 to-amber-600 text-white font-bold text-xs">
+                <div className="relative shrink-0">
+                  <Avatar className="h-9 w-9 border border-emerald-500/40 ring-2 ring-emerald-500/15 shadow-xs">
+                    <AvatarFallback className="bg-gradient-to-br from-emerald-700 to-teal-600 text-white font-black text-xs">
                       {(() => {
                         const parts = (currentUser?.name || '').trim().split(' ')
                         return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : 'CS'
@@ -307,21 +425,21 @@ export function RootLayout() {
                 {!isCollapsed && (
                   <div className="flex flex-col min-w-0 leading-tight">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-[#5d5fef] transition-colors">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                         {currentUser?.name || 'Học viên CAND'}
                       </span>
                       {currentUser?.role === 'ADMIN' || currentUser?.email === 'admin@gmail.com' ? (
-                        <span className="px-1.5 py-0.2 rounded-md bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 text-[9px] font-black uppercase tracking-wider shrink-0">
+                        <span className="px-1.5 py-0.2 rounded-md bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 text-[8.5px] font-black uppercase tracking-wider shrink-0">
                           Admin
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[9px] font-black uppercase tracking-wider shrink-0">
+                        <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[8.5px] font-black uppercase tracking-wider shrink-0">
                           Học viên
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                      {currentUser?.email ? `@${currentUser.email.split('@')[0]}` : '@chien_si.cand'}
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                      {currentUser?.email ? `@${currentUser.email.split('@')[0]}` : '@canbo.t05'}
                     </span>
                   </div>
                 )}
@@ -333,7 +451,7 @@ export function RootLayout() {
                     logout()
                     navigate('/')
                   }}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer shrink-0 ml-1"
                   title="Đăng xuất khỏi hệ thống"
                 >
                   <LogOut className="h-4 w-4" />
@@ -361,49 +479,108 @@ export function RootLayout() {
           <div className="flex items-center gap-3 min-w-0">
             {/* Nút Hamburger mở Sidebar trên Mobile hoặc khi Sidebar ẩn (như Luyện đề) */}
             <div className={cn(isQuizMode ? "flex" : "md:hidden")}>
-              <Sheet>
+              <Sheet open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
                 <SheetTrigger
                   render={
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="h-9 w-9 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                     />
                   }
                 >
                   <Menu className="h-5 w-5" />
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-72 bg-white dark:bg-[#111622] border-r border-slate-200 dark:border-slate-800">
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                    <PoliceLogo className="h-9 w-9" />
-                    <div>
-                      <h2 className="font-extrabold text-sm text-slate-900 dark:text-white">Jurisprudence Hub</h2>
-                      <p className="text-[10px] font-black text-red-600 dark:text-red-400">T05 • ĐH Cảnh Sát Nhân Dân</p>
+                <SheetContent side="left" className="p-0 w-80 bg-white dark:bg-[#0f1420] border-r border-slate-200/90 dark:border-slate-800/90 flex flex-col justify-between">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {/* Header Mobile Drawer */}
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-3 bg-gradient-to-b from-slate-50/50 to-transparent dark:from-slate-900/40">
+                      <div className="p-1 rounded-xl bg-gradient-to-br from-emerald-500/10 via-amber-500/10 to-red-500/10 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+                        <PoliceLogo className="h-8 w-8 object-contain" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h2 className="font-black text-sm text-slate-900 dark:text-white">JURISPRUDENCE</h2>
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/80">
+                            HUB
+                          </span>
+                        </div>
+                        <p className="text-[9.5px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">T05 • ĐH CẢNH SÁT NHÂN DÂN</p>
+                      </div>
                     </div>
+
+                    {/* Danh sách Menu Mobile Flat (Màu sắc đa sắc từng trang theo UI Cũ) */}
+                    <nav className="p-3 space-y-1.5">
+                      {filteredNavItems.map((item) => {
+                        const Icon = item.icon
+                        const isActive = item.path === '/' 
+                          ? location.pathname === '/' 
+                          : location.pathname.startsWith(item.path)
+                        const theme = item.theme
+
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              navigate(item.path)
+                              setIsMobileDrawerOpen(false)
+                            }}
+                            className={cn(
+                              "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer select-none",
+                              isActive
+                                ? cn(theme.activeBg, theme.activeBorder, theme.activeText, "border font-bold shadow-2xs")
+                                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
+                            )}
+                          >
+                            <div className={cn(
+                              "p-2 rounded-xl shrink-0 transition-all",
+                              isActive ? theme.iconGradient : cn("text-slate-400 dark:text-slate-500", theme.hoverIconBg)
+                            )}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <span className="flex-1 font-semibold text-[13.5px]">{item.name}</span>
+                            <RenderNavBadge badgeType={item.badgeType} />
+                          </div>
+                        )
+                      })}
+                    </nav>
                   </div>
-                  <div className="p-3 space-y-1 overflow-y-auto">
-                    {menuItems.map(item => (
-                      <NavLink
-                      key={item.name}
-                      to={item.path}
-                      onClick={(e) => {
-                        const isProtected = item.path !== '/'
-                        if (!isLoggedIn && isProtected) {
-                          e.preventDefault()
-                          openAuthModal(item.path)
-                        }
-                      }}
-                      className={({ isActive }) => cn(
-                          "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                          isActive
-                            ? "text-[#5d5fef] bg-[#f0effe] dark:bg-[#5d5fef]/15 font-semibold"
-                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        )}
+
+                  {/* Footer Mobile Drawer */}
+                  <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60">
+                    {!isLoggedIn ? (
+                      <button
+                        onClick={() => openAuthModal()}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 text-white font-extrabold text-xs shadow-sm cursor-pointer"
                       >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.name}</span>
-                      </NavLink>
-                    ))}
+                        <LogIn className="h-4 w-4" />
+                        <span>ĐĂNG NHẬP HỆ THỐNG</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-emerald-700 text-white font-bold text-xs">
+                              CS
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{currentUser?.name || 'Học viên'}</p>
+                            <p className="text-[10px] text-slate-400 truncate">{currentUser?.email}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            logout()
+                            navigate('/')
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 cursor-pointer"
+                          title="Đăng xuất"
+                        >
+                          <LogOut className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>
@@ -466,66 +643,6 @@ export function RootLayout() {
               </div>
             </div>
 
-            {/* Nút Chuông Thông báo */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(prev => !prev)}
-                className="relative p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                title="Thông báo"
-              >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
-                )}
-              </button>
-
-              {/* Dropdown Thông báo */}
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-80 md:w-96 rounded-2xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-slate-800 shadow-xl p-4 z-50 text-slate-800 dark:text-slate-200"
-                  >
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm">Thông Báo Học Tập</span>
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-[#5d5fef]/10 text-[#5d5fef]">
-                          {unreadCount} mới
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => setUnreadCount(0)}
-                        className="text-xs text-slate-400 hover:text-[#5d5fef] transition-colors cursor-pointer"
-                      >
-                        Đánh dấu đã đọc
-                      </button>
-                    </div>
-
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800/80 my-2 max-h-72 overflow-y-auto">
-                      {notifications.map((n) => (
-                        <div key={n.id} className="py-2.5 px-1 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-lg transition-colors cursor-pointer">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white">{n.title}</span>
-                            <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
-                          </div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">{n.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className="w-full mt-2 py-1.5 text-center text-xs font-semibold text-[#5d5fef] hover:bg-[#5d5fef]/5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Đóng
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* NÚT CTA CHÍNH: "+ Luyện Đề Mới" */}
             <button

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   BookOpen, Plus, Search, ChevronDown, ChevronUp,
   Trash2, X, FolderPlus, Save, Edit3, ArrowRight,
@@ -334,6 +334,7 @@ function LessonNotebookPreview({
 
 export function DocumentPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const isAdmin = isAdminUser()
   const { openAuthModal } = useAuth()
 
@@ -418,6 +419,17 @@ export function DocumentPage() {
   useEffect(() => {
     loadChapters(searchQuery)
   }, [loadChapters, searchQuery])
+
+  // Tự động cuộn đến chương được chọn từ Dropdown Menu Sidebar
+  useEffect(() => {
+    if (!location.search) return
+    const params = new URLSearchParams(location.search)
+    const chapterId = params.get('chapter')
+    if (chapterId) {
+      setSelectedChapterTab(chapterId)
+      scrollToTarget(`chapter-${chapterId}`)
+    }
+  }, [location.search])
 
   // Đóng/Mở từng chương
   const toggleCollapse = (chapterId: string) => {

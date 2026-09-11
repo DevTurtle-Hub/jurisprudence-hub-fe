@@ -55,7 +55,7 @@ export const questionBankApi = {
           category: params?.category || undefined,
           questionType: params?.questionType || undefined,
           keyword: params?.keyword || undefined,
-          isDraft: params?.isDraft !== undefined ? params.isDraft : true,
+          isDraft: params?.isDraft !== undefined ? params.isDraft : undefined,
         },
       }
     );

@@ -12,9 +12,7 @@ import {
   CheckCircle2,
   UserCheck,
   ExternalLink,
-  Sparkles,
-  Zap,
-  Award
+  Zap
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'

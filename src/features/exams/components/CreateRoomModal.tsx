@@ -19,13 +19,11 @@ import {
   Edit3,
   Search,
   ChevronLeft,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from 'lucide-react'
 import { cn, cleanQuestionText, cleanOptionText, formatSituationalParagraphs } from '@/lib/utils'
 import type { ExamRoom, MultipleChoiceQuestion, EssayQuestion } from '../types'
 import { examApi } from '@/services/examApi'
-import { generateSample60Questions } from '../sampleQuestions60'
 
 interface CreateRoomModalProps {
   isOpen: boolean
@@ -242,14 +240,13 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
   const [highlightedMcId, setHighlightedMcId] = useState<string | null>(null)
   const [isMatrixExpanded, setIsMatrixExpanded] = useState(true)
 
+  // Thang điểm phần trắc nghiệm (Chuẩn CAND 70 điểm)
+  const [mcMaxScore, setMcMaxScore] = useState(70)
+
   // Đề bài duy nhất cho phần Văn Nghị Luận Tự Luận (30 điểm)
-  const [essayTitle, setEssayTitle] = useState('PHẦN I: TỰ LUẬN (30 điểm)')
-  const [essayContext, setEssayContext] = useState(
-    'Chủ tịch Hồ Chí Minh khẳng định: “Tương lai thuộc về thanh niên. Tương lai là cách mạng luôn tiến lên. Là chủ của tương lai, thanh niên không thể không có lý tưởng cao cả. Vì vậy thanh niên phải có cuộc sống chính trị tích cực và cách mạng.”. \n(Hồ Chí Minh toàn tập, Tập 12. NXB Chính trị quốc gia - Sự thật, 2011, trang 519)'
-  )
-  const [essayPrompt, setEssayPrompt] = useState(
-    'Anh/chị hãy viết một bài nghị luận (tối thiểu 500 chữ) trình bày cách hiểu của mình về nội dung đoạn trích trên và liên hệ với vai trò của thanh niên trong giai đoạn hiện nay.'
-  )
+  const [essayTitle, setEssayTitle] = useState('')
+  const [essayContext, setEssayContext] = useState('')
+  const [essayPrompt, setEssayPrompt] = useState('')
   const [essayMaxScore, setEssayMaxScore] = useState(30)
 
   // State chỉnh sửa câu hỏi trắc nghiệm (Modal Sửa)
@@ -285,7 +282,8 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
     setUploadedMCFileName('')
     setMcParseStatus('IDLE')
     setMcParseMessage('')
-    setEssayTitle('PHẦN I: TỰ LUẬN (30 điểm)')
+    setMcMaxScore(70)
+    setEssayTitle('')
     setEssayContext('')
     setEssayPrompt('')
     setEssayMaxScore(30)
@@ -344,17 +342,6 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
     }
   }
 
-  // Nạp nhanh bộ 60 câu trắc nghiệm chuẩn nghiệp vụ CAND có sẵn đáp án
-  const handleLoadSample60Questions = useCallback(() => {
-    const samples = generateSample60Questions()
-    setExtractedMC(samples)
-    setUploadedMCFileName('Bo_de_chuan_60_cau_CAND.pdf')
-    setMcParseStatus('COMPLETED')
-    setMcParseMessage('Đã nạp thành công 60 câu trắc nghiệm chuẩn nghiệp vụ CAND!')
-    if (!title) {
-      setTitle('Đề Sát Hạch Chuẩn CAND - 60 Câu Trắc Nghiệm & Tự Luận')
-    }
-  }, [title])
 
   // Nạp lại mẫu đề bài văn nghị luận chuẩn Hồ Chí Minh về thanh niên
   const handleQuickFillEssay = useCallback(() => {
@@ -602,6 +589,9 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
     try {
       // Gọi API thật tới Backend Spring Boot để lưu vào Database
       const resData = await examApi.createRoom(roomPayload)
+      handleResetAll()
+      setTitle('')
+      setCode(`CAND-${Math.floor(1000 + Math.random() * 9000)}`)
       onSuccess(resData)
       onClose()
     } catch (err: any) {
@@ -780,7 +770,7 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
                           <HelpCircle className="h-4 w-4" />
                         </div>
                         <span className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wide">
-                          I. Phần Trắc Nghiệm
+                          I. Phần Trắc Nghiệm (70đ)
                         </span>
                       </div>
                       <span className={cn(
@@ -794,60 +784,81 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
                     </div>
 
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Tải lên tệp đề thi (PDF, Word, Excel, TXT) từ máy tính. Hệ thống Backend AI tự động bóc tách danh sách câu hỏi trắc nghiệm.
+                      Tải lên tệp đề thi (PDF, Word, Excel, TXT) từ máy tính. Hệ thống Backend AI tự động bóc tách danh sách câu hỏi trắc nghiệm (Thang điểm chuẩn 70đ):
                     </p>
 
-                    {/* Nút bấm tải tệp từ PC & Nạp nhanh bộ 60 câu */}
-                    <div className="pt-1 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => mcFileInputRef.current?.click()}
-                        className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer"
-                        title="Chọn tệp đề thi trắc nghiệm từ máy tính (PDF, Word, Excel, TXT)"
-                      >
-                        <FileUp className="h-4 w-4 stroke-[2]" />
-                        <span>Import Từ File (PDF / Word)</span>
-                      </button>
+                    {/* Hộp cấu hình nạp đề & thang điểm */}
+                    <div className="space-y-2.5 text-xs bg-slate-50/80 dark:bg-slate-900/70 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Tệp đề thi trắc nghiệm (PDF, Word, Excel, TXT)
+                        </label>
+                        {/* Nút bấm tải tệp từ PC */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => mcFileInputRef.current?.click()}
+                            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs hover:shadow cursor-pointer"
+                            title="Chọn tệp đề thi trắc nghiệm từ máy tính (PDF, Word, Excel, TXT)"
+                          >
+                            <FileUp className="h-4 w-4 stroke-[2]" />
+                            <span>Import Từ File (PDF / Word)</span>
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={handleLoadSample60Questions}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                        title="Nạp nhanh 60 câu hỏi chuẩn nghiệp vụ CAND có sẵn đáp án để kiểm thử"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>⚡ Nạp Nhanh 60 Câu Chuẩn</span>
-                      </button>
-
-                      <input
-                        ref={mcFileInputRef}
-                        type="file"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
-                        onChange={handleMCFileUpload}
-                        className="hidden"
-                      />
-                    </div>
-
-                    {/* Trạng thái quét & bóc tách tệp từ PC */}
-                    {(mcParseStatus === 'UPLOADING' || mcParseStatus === 'PARSING') && (
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 text-xs animate-pulse border border-indigo-200 dark:border-indigo-800">
-                        <Loader2 className="h-4 w-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0" />
-                        <span className="font-medium">{mcParseMessage}</span>
-                      </div>
-                    )}
-
-                    {/* Báo cáo đã nạp thành công */}
-                    {extractedMC.length > 0 && uploadedMCFileName && mcParseStatus === 'COMPLETED' && (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs">
-                        <div className="flex items-center gap-2 truncate mr-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="truncate font-medium">Tệp PC: <strong>{uploadedMCFileName}</strong></span>
+                          <input
+                            ref={mcFileInputRef}
+                            type="file"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                            onChange={handleMCFileUpload}
+                            className="hidden"
+                          />
                         </div>
-                        <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
-                          {extractedMC.length} câu
-                        </span>
                       </div>
-                    )}
+
+                      {/* Trạng thái quét & bóc tách tệp từ PC */}
+                      {(mcParseStatus === 'UPLOADING' || mcParseStatus === 'PARSING') && (
+                        <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-200 text-xs animate-pulse border border-indigo-200 dark:border-indigo-800">
+                          <Loader2 className="h-4 w-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0" />
+                          <span className="font-medium">{mcParseMessage}</span>
+                        </div>
+                      )}
+
+                      {/* Báo cáo đã nạp thành công */}
+                      {extractedMC.length > 0 && uploadedMCFileName && mcParseStatus === 'COMPLETED' && (
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs">
+                          <div className="flex items-center gap-2 truncate mr-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span className="truncate font-medium">Tệp PC: <strong>{uploadedMCFileName}</strong></span>
+                          </div>
+                          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
+                            {extractedMC.length} câu
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Thang điểm trắc nghiệm */}
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Thang điểm trắc nghiệm:</span>
+                          <input
+                            type="number"
+                            min={10}
+                            max={100}
+                            value={mcMaxScore}
+                            onChange={(e) => setMcMaxScore(Number(e.target.value))}
+                            className="w-16 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-center text-indigo-600 dark:text-indigo-400"
+                          />
+                          <span className="text-[11px] text-slate-500 font-medium">điểm</span>
+                        </div>
+
+                        {extractedMC.length > 0 && (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                            <Check className="h-3.5 w-3.5 stroke-[3]" />
+                            <span>Đã sẵn sàng</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {extractedMC.length > 0 && (
@@ -979,10 +990,11 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess }: CreateRoomModalP
                     <span className="text-slate-500 dark:text-slate-400 italic">
                       * Thí sinh sẽ viết bài nghị luận trực tiếp trong phòng thi
                     </span>
-                    {essayPrompt.trim() && (
+                    {(essayTitle.trim() || essayContext.trim() || essayPrompt.trim()) && (
                       <button
                         type="button"
                         onClick={() => {
+                          setEssayTitle('')
                           setEssayContext('')
                           setEssayPrompt('')
                         }}
